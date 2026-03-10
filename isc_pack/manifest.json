@@ -1,0 +1,20 @@
+{
+  "pack_version": 2,
+  "signature_version": 1,
+  "tool_version": "0.1.0",
+  "sealed_at": "2026-03-10T08:49:34.644471944+00:00",
+  "os": "android",
+  "arch": "aarch64",
+  "artifact": {
+    "name": "evidence_pack_v2_release.tar",
+    "hash": "213af1811e23f0ee451e493be39c127822aa5f789a1ae25d12d8dca1d35e6a43",
+    "repo": "codeberg.org/buildseal/isc-core",
+    "commit": "abc123"
+  },
+  "producer": {
+    "key_fingerprint": "18a0172956d820f8"
+  },
+  "files": {
+    "evidence_pack_v2_release.tar": "213af1811e23f0ee451e493be39c127822aa5f789a1ae25d12d8dca1d35e6a43"
+  }
+}
