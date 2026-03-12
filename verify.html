@@ -80,6 +80,8 @@
 
   <div class="section">
     <div class="row"><div class="label">STATUS</div><div class="value"><span class="badge" id="badge">—</span></div></div>
+    <div class="row"><div class="label">INTEGRITY</div><div class="value" id="integrity-note" style="font-size:12px;color:#555;font-family:monospace;">—</div></div>
+    <div class="row"><div class="label">PROVENANCE</div><div class="value" style="font-size:12px;color:#666;font-family:monospace;">⚠ Not verified — source origin is outside this proof</div></div>
     <div class="row"><div class="label">Seal ID</div><div class="value" id="seal-id">—</div></div>
     <div class="row"><div class="label">Artifact Hash</div><div class="value" id="artifact-hash">—</div></div>
     <div class="row"><div class="label">Repository</div><div class="value" id="repo">—</div></div>
@@ -89,13 +91,13 @@
   </div>
 
   <a href="#" id="download-pack" class="btn" style="display:none">&#8595; Download Evidence Pack</a>
-  <a href="https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify" class="btn">&#8595; Download isc_verify binary</a>
+  <a href="https://buildseal.io/downloads/isc_verify" class="btn">&#8595; Download isc_verify binary</a>
 
   <div class="section">
     <div class="section-title">Cryptographic Verification</div>
     <div style="font-size:12px;color:#666;margin-bottom:12px;">Verify without trusting BuildSeal. Run locally:</div>
     <div class="code-block">
-      curl -L https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify -o isc_verify<br>
+      curl -L https://buildseal.io/downloads/isc_verify -o isc_verify<br>
       chmod +x isc_verify<br>
       ./isc_verify evidence_pack.tar
     </div>
@@ -131,6 +133,7 @@ async function load() {
 
     document.getElementById('loading').style.display = 'none';
 
+    document.getElementById('integrity-note').textContent = 'Artifact has not changed since sealing';
     document.getElementById('seal-id').textContent = data.seal_id || sealId;
     document.getElementById('artifact-hash').textContent = data.artifact_hash || '—';
     document.getElementById('repo').textContent = data.repo || '—';
@@ -148,7 +151,7 @@ async function load() {
       badge.className = 'badge genuine';
       vi.textContent = '✔';
       vw.textContent = 'Genuine';
-      vsub.textContent = 'Cryptographically Verified · ISC Engine · ' + new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+      vsub.textContent = 'Seal status confirmed · Use isc_verify for cryptographic proof · ' + new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
       vs.className = 'verdict-screen genuine show';
     } else if (data.status === 'queued' || data.status === 'pending') {
       badge.textContent = 'PENDING';
