@@ -1,44 +1,80 @@
-# Security Model
+# BuildSeal Security Model
 
-BuildSeal is an evidence system.
-It guarantees integrity of artifacts and traceability of sealing events.
-It does not guarantee identity, safety, or compliance by itself.
+## Design trade-off
 
-## Guarantees
+Every supply-chain security system chooses from this triangle:
 
-BuildSeal guarantees the following:
+  broad scope
+  strong trust
+  few dependencies
 
-### Integrity
-The artifact has not changed since it was sealed.
+You cannot have all three.
 
-### Sealing time
-The evidence pack contains the timestamp of sealing (sealed_at).
+Sigstore: broad scope, strong trust, many dependencies.
+PGP: few dependencies, complex trust model.
+BuildSeal: narrow scope, few dependencies, portable.
 
-### Signature validity
-The evidence pack was signed by the key that produced the signature.
+Narrow scope is not a weakness. It is what makes offline verification possible.
 
-### Evidence consistency
-The artifact, metadata, and signature belong to the same evidence pack.
+## What BuildSeal guarantees
 
-## Non-Guarantees
+One thing only:
 
-BuildSeal does NOT guarantee the following:
+  This artifact was sealed by this key at this moment and has not changed since.
 
-### Authorship ⚠️
-BuildSeal verifies the key, not the person.
-Who owns the key is outside the scope.
+Nothing more.
 
-### Reproducibility ❌
-BuildSeal does not guarantee that the build environment was clean
-or that the artifact can be reproduced.
+## Security boundaries
 
-### Code safety ❌
-BuildSeal does not verify that the code is secure, correct, or trusted.
+ISCProof guarantees seal authenticity.
+It does not guarantee identity, safety, or reproducibility.
 
-### Compliance ❌
-BuildSeal produces verifiable evidence.
-It does not by itself make a system compliant.
+BuildSeal does not prove identity.
+A valid seal only proves that the signing key produced the record.
+It does not prove who controls the key.
 
----
+BuildSeal does not prove safety.
+A sealed artifact may contain vulnerabilities or malware.
+Sealing is not scanning.
 
-> BuildSeal produces evidence. It does not produce compliance.
+BuildSeal does not prove reproducibility.
+The same source may produce a different binary under different build conditions.
+BuildSeal does not verify build pipelines or environments.
+
+BuildSeal does not prove source.
+A valid seal does not prove the artifact originated from the stated repository.
+Commit and repo fields are metadata provided by the producer.
+
+BuildSeal does not prove long-term validity.
+If the signing key is compromised, all seals produced by that key are suspect.
+This version does not include a revocation mechanism, transparency log, or trusted time anchor.
+
+## Appropriate use
+
+BuildSeal is appropriate for:
+  release authentication in small and medium projects
+  offline verification without network infrastructure
+  air-gapped environments
+  distributable proof that travels with the artifact
+  audit evidence where cryptographic integrity is sufficient
+
+BuildSeal is not appropriate for:
+  legal or forensic chain of custody
+  long-term archival with revocation guarantees
+  government or defense supply chain
+  environments requiring a transparency log
+  proof of reproducibility
+
+## Scope
+
+Use Sigstore if you need a transparency log.
+Use in-toto if you need build pipeline verification.
+Use BuildSeal if you need offline, self-contained, portable proof.
+
+These are not competing tools. They solve different problems.
+
+## Summary
+
+BuildSeal produces evidence. It does not produce compliance.
+BuildSeal proves integrity. It does not prove identity.
+BuildSeal is honest about what it cannot do.
