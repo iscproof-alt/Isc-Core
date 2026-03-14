@@ -1,0 +1,50 @@
+{
+  "version": 4,
+  "vectors": [
+    {
+      "id": "vector_001",
+      "class": "positive",
+      "expect": "ok"
+    },
+    {
+      "id": "neg_001_noncanonical_payload",
+      "class": "negative",
+      "expect": "ERR_NON_CANONICAL_ENCODING"
+    },
+    {
+      "id": "neg_002_wrong_leaf_order",
+      "class": "negative",
+      "expect": "ERR_LEAF_ORDER"
+    },
+    {
+      "id": "neg_003_leaf_hash_mismatch",
+      "class": "negative",
+      "expect": "ERR_LEAF_HASH"
+    },
+    {
+      "id": "neg_004_root_mismatch",
+      "class": "negative",
+      "expect": "ERR_ROOT_MISMATCH"
+    },
+    {
+      "id": "neg_005_missing_required_leaf",
+      "class": "negative",
+      "expect": "ERR_REQUIRED_LEAF"
+    },
+    {
+      "id": "neg_006_unknown_hash_alg",
+      "class": "negative",
+      "expect": "ERR_HASH_ALG"
+    },
+    {
+      "id": "neg_007_no_valid_signature",
+      "class": "negative",
+      "expect": "ERR_SIGNATURE"
+    },
+    {
+      "id": "neg_008_unknown_critical_tag",
+      "class": "negative",
+      "expect": "ERR_CRITICAL_TAG"
+    }
+  ]
+}
