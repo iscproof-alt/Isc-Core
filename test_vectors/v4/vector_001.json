@@ -1,0 +1,54 @@
+{
+  "_note": "ISCProof V4 Test Vector 001. Canonical encoding: sorted-key JSON (CBOR pending). hash_alg: sha256.",
+  "version": 4,
+  "hash_alg": "sha256",
+  "inputs": {
+    "artifact_payload": {
+      "name": "example-tool",
+      "version": "1.0.0",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "attestation_payload": {
+      "repo": "codeberg.org/example/example-tool",
+      "commit": "0000000000000000000000000000000000000000",
+      "branch": "main"
+    },
+    "metadata_payload": {
+      "tool": "isc_pack",
+      "tool_version": "0.1.0",
+      "os": "linux",
+      "arch": "x86_64",
+      "sealed_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  "canonical_encoding": "sorted-key JSON, no whitespace (temporary; CBOR in v4.1)",
+  "canonical_bytes": {
+    "0x01_artifact": "{\"name\":\"example-tool\",\"sha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"version\":\"1.0.0\"}",
+    "0x02_attestation": "{\"branch\":\"main\",\"commit\":\"0000000000000000000000000000000000000000\",\"repo\":\"codeberg.org/example/example-tool\"}",
+    "0x03_metadata": "{\"arch\":\"x86_64\",\"os\":\"linux\",\"sealed_at\":\"2026-01-01T00:00:00Z\",\"tool\":\"isc_pack\",\"tool_version\":\"0.1.0\"}"
+  },
+  "leaf_hashes": {
+    "0x01_artifact": "acb02b9eb019b76ad348181fa88bf711eb536b950a2aad5aaf9899622b808651",
+    "0x02_attestation": "d9988bb19eee27083cc030c74871f9d6a890f892a22578ce1acd23079b5fd6c1",
+    "0x03_metadata": "4b918ed3e36a08d851ad58adf4650a283d7a994541287d07d22a0f4b9b6806b3"
+  },
+  "sorted_leaves": [
+    {
+      "type_tag": 1,
+      "type_tag_hex": "0x01",
+      "leaf_hash": "acb02b9eb019b76ad348181fa88bf711eb536b950a2aad5aaf9899622b808651"
+    },
+    {
+      "type_tag": 2,
+      "type_tag_hex": "0x02",
+      "leaf_hash": "d9988bb19eee27083cc030c74871f9d6a890f892a22578ce1acd23079b5fd6c1"
+    },
+    {
+      "type_tag": 3,
+      "type_tag_hex": "0x03",
+      "leaf_hash": "4b918ed3e36a08d851ad58adf4650a283d7a994541287d07d22a0f4b9b6806b3"
+    }
+  ],
+  "root_input": "[[1,\"acb02b9eb019b76ad348181fa88bf711eb536b950a2aad5aaf9899622b808651\"],[2,\"d9988bb19eee27083cc030c74871f9d6a890f892a22578ce1acd23079b5fd6c1\"],[3,\"4b918ed3e36a08d851ad58adf4650a283d7a994541287d07d22a0f4b9b6806b3\"]]",
+  "pack_root": "a4dbc5baf43a664d92cb4e8fca40bd097d157998cb143c2a6c788005812f14a7"
+}
