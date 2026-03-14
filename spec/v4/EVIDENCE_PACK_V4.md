@@ -287,6 +287,78 @@ Implementations MUST verify correctness against published test vectors. An imple
 
 ---
 
+---
+
+## 4.y Canonical Test Vector Format
+
+Test vectors MUST be published alongside this specification. This section defines the required format.
+
+### 4.y.1 Test Vector Structure
+
+Each test vector MUST be a JSON document with the following fields:
+
+    {
+      "version":            4,
+      "hash_alg":           "sha256",
+      "inputs": {
+        "artifact_payload":     { ... },
+        "attestation_payload":  { ... },
+        "metadata_payload":     { ... }
+      },
+      "canonical_encoding":   string (description of encoding used),
+      "canonical_bytes": {
+        "0x01_artifact":     string (canonical byte representation),
+        "0x02_attestation":  string (canonical byte representation),
+        "0x03_metadata":     string (canonical byte representation)
+      },
+      "leaf_hashes": {
+        "0x01_artifact":     string (hex),
+        "0x02_attestation":  string (hex),
+        "0x03_metadata":     string (hex)
+      },
+      "sorted_leaves": [
+        { "type_tag": uint, "type_tag_hex": string, "leaf_hash": string }
+      ],
+      "root_input":  string (exact bytes fed to root hash),
+      "pack_root":   string (hex, expected result)
+    }
+
+### 4.y.2 Conformance Requirement
+
+An implementation MUST be tested against all published test vectors before being considered conformant.
+
+For each test vector, the implementation MUST:
+- Reproduce identical canonical_bytes from the given inputs
+- Reproduce identical leaf_hashes from canonical_bytes
+- Reproduce identical sorted_leaves ordering
+- Reproduce identical pack_root from sorted_leaves
+
+Any deviation is a conformance failure.
+
+### 4.y.3 Canonical Encoding Note
+
+Test Vector 001 uses sorted-key JSON with no whitespace as a deterministic baseline:
+
+    canonical_bytes = json.dumps(payload, sort_keys=True, separators=(',', ':'))
+
+This is a temporary baseline. When canonical CBOR encoding is fully specified and reference-implemented, CBOR-based test vectors will supersede JSON-based vectors.
+
+JSON-based test vectors remain valid for implementations that have not yet migrated to CBOR. CBOR-based test vectors will be published as a separate series (vector_cbor_001, etc.).
+
+### 4.y.4 Test Vector Publication
+
+Published test vectors are located at:
+
+    test_vectors/v4/vector_001.json
+
+New test vectors MUST be added for:
+- Each new leaf type
+- Each new hash algorithm
+- Each extension tag
+- Each known edge case (odd leaf count, duplicate type_tag, empty optional leaves)
+
+---
+
 ## 11. V3 Compatibility
 
 V3 remains valid. V3 packs must continue to verify correctly.
