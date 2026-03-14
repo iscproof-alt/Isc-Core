@@ -200,6 +200,93 @@ This pattern follows TUF and X.509 precedent and ensures forward compatibility f
 
 ---
 
+---
+
+## 4.x Deterministic Canonical Processing Requirements
+
+This specification requires that pack construction and verification be fully deterministic.
+
+Given the same semantic input, independent implementations MUST produce identical leaf hashes, identical leaf ordering, and identical pack_root values.
+
+Determinism is a normative requirement for all stages of pack processing.
+
+### 4.x.1 Canonical Payload Encoding
+
+Leaf payloads MUST be encoded using a deterministic canonical representation.
+
+Implementations MUST use canonical CBOR encoding as defined in RFC 8949 Section 4.2, unless explicitly specified otherwise by this specification.
+
+Requirements:
+- The same semantic payload MUST produce identical byte representation.
+- Map keys MUST be sorted according to canonical CBOR rules.
+- Floating-point normalization MUST follow canonical CBOR rules.
+- No implementation-specific formatting is allowed.
+- JSON MUST NOT be used as normative encoding for hashing.
+- JSON MAY be used for debugging or display, but MUST NOT be used as input to hash computation.
+
+The byte sequence produced by canonical encoding is the exact input to leaf hashing:
+
+    leaf_hash = HASH(canonical_payload_bytes)
+
+### 4.x.2 Leaf Hash Determinism
+
+Leaf hash computation MUST be deterministic.
+
+For a given canonical payload byte sequence, all implementations MUST produce the same leaf_hash.
+
+The hash function MUST be explicitly defined by the pack header hash_alg field. Implementations MUST NOT change hash algorithms implicitly.
+
+The leaf hash input MUST be exactly the canonical payload bytes, without additional whitespace, formatting, or transport encoding.
+
+### 4.x.3 Deterministic Leaf Ordering
+
+Leaves MUST be sorted before root computation. Sorting MUST be deterministic.
+
+    sort by (type_tag ASC, leaf_hash ASC)
+
+Where:
+- type_tag is compared as unsigned integer
+- leaf_hash is compared as byte string using lexicographic byte order
+- comparison MUST NOT use string, hex, or locale-dependent ordering
+
+All implementations MUST produce identical ordering for the same leaf set.
+
+### 4.x.4 Deterministic Pack Root Computation
+
+The pack root MUST be computed from the canonical ordered leaf set:
+
+    pack_root = HASH(canonical_encoding(sorted_leaves))
+
+The encoding MUST be deterministic and canonical. Implementations MUST use canonical CBOR encoding for the leaf list. The same leaf set MUST produce the same pack_root across all implementations.
+
+### 4.x.5 Pack Serialization Determinism
+
+Pack serialization format MUST NOT affect pack_root.
+
+Hash inputs MUST use canonical encoding. pack_root MUST NOT depend on container format. Verification MUST reconstruct canonical representation before hashing.
+
+Pack formats MAY evolve, but canonical hashing rules MUST remain stable.
+
+### 4.x.6 Independent Implementation Requirement
+
+Given the same semantic input, two independent implementations MUST produce:
+- identical canonical payload bytes
+- identical leaf_hash values
+- identical leaf ordering
+- identical pack_root
+
+If this condition does not hold, the implementation is non-conformant.
+
+### 4.x.7 Test Vector Requirement
+
+This specification REQUIRES publication of test vectors.
+
+Each test vector MUST include: input payloads, canonical payload bytes, leaf hashes, sorted leaf list, and pack_root.
+
+Implementations MUST verify correctness against published test vectors. An implementation that fails test vector verification MUST be considered non-conformant.
+
+---
+
 ## 11. V3 Compatibility
 
 V3 remains valid. V3 packs must continue to verify correctly.
