@@ -404,3 +404,22 @@ These may be built on top of ISCProof. They must not be built into it.
 
 ISCProof Evidence Pack V4 - Draft
 Part of the ISCProof specification. See also: TRUST_MODEL.md, SECURITY_MODEL.md
+
+
+---
+
+## Future: Trusted Timestamp (RFC 3161)
+
+Planned leaf tag: 0x05 (timestamp)
+
+When added:
+- Producer requests TSA signature over pack_root at seal time
+- TSA response stored as 0x05 leaf payload
+- Verifier can confirm pack existed before a given time
+- Offline verification remains possible (TSA response self-contained)
+
+Verification policy (accepted TSA, trust rules) is defined in TRUST_MODEL.md.
+
+This extension does not break V4.
+It adds a new optional core leaf.
+Tag 0x05 is reserved for this purpose.
