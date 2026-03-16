@@ -1,0 +1,22 @@
+steps:
+  - name: build
+    image: rust:1.75-slim
+    commands:
+      - cargo build --release
+
+  - name: seal
+    image: alpine:latest
+    commands:
+      - apk add --no-cache curl
+      - curl -sL https://buildseal.io/downloads/isc_pack_v4 -o isc_pack_v4
+      - chmod +x isc_pack_v4
+      - ./isc_pack_v4 target/release/example-tool codeberg.org/Buildseal/example-rust-cli $CI_COMMIT_SHA
+      - echo "Pack created successfully"
+
+  - name: verify
+    image: alpine:latest
+    commands:
+      - apk add --no-cache curl
+      - curl -sL https://buildseal.io/downloads/isc_verify_v4 -o isc_verify_v4
+      - chmod +x isc_verify_v4
+      - ./isc_verify_v4 example-tool_v4_pack.json
