@@ -160,7 +160,7 @@ fn main() {
     } else {
         None
     };
-    let lh05 = timestamp_payload_hex.as_ref().map(|h| sha256_hex(h.as_bytes()));
+    let lh05 = timestamp_payload_hex.as_ref().map(|h| sha256_hex(&hex::decode(h).unwrap_or_default()));
 
     let mut leaves: Vec<(u64, String)> = vec![
         (1, lh01.clone()),
@@ -182,18 +182,21 @@ fn main() {
     let root = sha256_hex(root_input.as_bytes());
     let sig = signing_key.sign(hex::decode(&root).unwrap().as_slice());
 
+    let mut payloads_map = serde_json::Map::new();
+    payloads_map.insert(lh01.clone(), json!(hex::encode(canonical_json(&artifact_payload).as_bytes())));
+    payloads_map.insert(lh02.clone(), json!(hex::encode(canonical_json(&attestation_payload).as_bytes())));
+    payloads_map.insert(lh03.clone(), json!(hex::encode(canonical_json(&metadata_payload).as_bytes())));
+    if let (Some(ref lh), Some(ref ts_hex)) = (&lh05, &timestamp_payload_hex) {
+        payloads_map.insert(lh.clone(), json!(ts_hex));
+    }
+
     let pack = json!({
         "version": 4,
         "hash_alg": "sha256",
         "root": root,
         "leaves": leaves.iter().map(|(t,lh)| json!([t, lh])).collect::<Vec<_>>(),
-        "payloads": {
-            lh01: hex::encode(canonical_json(&artifact_payload).as_bytes()),
-            lh02: hex::encode(canonical_json(&attestation_payload).as_bytes()),
-            lh03: hex::encode(canonical_json(&metadata_payload).as_bytes()),
-        },
-        "signatures": [{"alg": "ed25519", "public_key": hex::encode(public_bytes), "signature": hex::encode(sig.to_bytes())}],
-        "timestamp_leaf": lh05.as_deref().unwrap_or("none")
+        "payloads": payloads_map,
+        "signatures": [{"alg": "ed25519", "public_key": hex::encode(public_bytes), "signature": hex::encode(sig.to_bytes())}]
     });
 
     let pack_name = format!("{}_v4_pack.json", artifact_name);
