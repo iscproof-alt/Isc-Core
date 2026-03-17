@@ -5,6 +5,7 @@ use sha2::{Sha256, Digest};
 use ed25519_dalek::{SigningKey, Signer};
 use rand::rngs::OsRng;
 use serde_json::json;
+extern crate reqwest;
 
 fn sha256_hex(data: &[u8]) -> String {
     let mut h = Sha256::new();
@@ -28,6 +29,45 @@ fn canonical_json(v: &serde_json::Value) -> String {
         }
         _ => v.to_string()
     }
+}
+
+
+fn get_rfc3161_timestamp(data: &[u8], tsa_url: &str) -> Result<Vec<u8>, String> {
+    use sha2::{Sha256, Digest};
+    
+    // Build timestamp query (minimal DER encoding)
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    let hash = hasher.finalize();
+    
+    // Minimal RFC 3161 timestamp request
+    // OID 1.2.840.113549.2.11 = SHA-256
+    let mut query = vec![
+        0x30, 0x27, // SEQUENCE
+        0x02, 0x01, 0x01, // version = 1
+        0x30, 0x1f, // MessageImprint SEQUENCE
+        0x30, 0x0d, // AlgorithmIdentifier
+        0x06, 0x09, // OID
+        0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, // SHA-256 OID
+        0x05, 0x00, // NULL
+        0x04, 0x20, // OCTET STRING, 32 bytes
+    ];
+    query.extend_from_slice(&hash);
+    
+    let client = reqwest::blocking::Client::new();
+    let resp = client
+        .post(tsa_url)
+        .header("Content-Type", "application/timestamp-query")
+        .body(query)
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .map_err(|e| format!("TSA request failed: {}", e))?;
+    
+    if !resp.status().is_success() {
+        return Err(format!("TSA returned status: {}", resp.status()));
+    }
+    
+    Ok(resp.bytes().map_err(|e| e.to_string())?.to_vec())
 }
 
 fn main() {
@@ -59,6 +99,12 @@ fn main() {
     let artifact_path = &args[1];
     let repo = &args[2];
     let commit = &args[3];
+
+    let tsa_url = if let Some(pos) = args.iter().position(|a| a == "--timestamp") {
+        Some(args.get(pos + 1).cloned().unwrap_or_else(|| "https://freetsa.org/tsr".to_string()))
+    } else {
+        None
+    };
 
     let signing_key = if let Some(pos) = args.iter().position(|a| a == "--key") {
         let keyfile = &args[pos + 1];
@@ -99,11 +145,31 @@ fn main() {
     let lh02 = sha256_hex(canonical_json(&attestation_payload).as_bytes());
     let lh03 = sha256_hex(canonical_json(&metadata_payload).as_bytes());
 
+    // RFC 3161 timestamp (optional)
+    let timestamp_payload_hex: Option<String> = if let Some(ref url) = tsa_url {
+        match get_rfc3161_timestamp(hex::decode(&lh03).unwrap_or_default().as_slice(), url) {
+            Ok(tsr) => {
+                println!("Timestamp: obtained from {}", url);
+                Some(hex::encode(&tsr))
+            }
+            Err(e) => {
+                eprintln!("Warning: timestamp failed: {}", e);
+                None
+            }
+        }
+    } else {
+        None
+    };
+    let lh05 = timestamp_payload_hex.as_ref().map(|h| sha256_hex(h.as_bytes()));
+
     let mut leaves: Vec<(u64, String)> = vec![
         (1, lh01.clone()),
         (2, lh02.clone()),
         (3, lh03.clone()),
     ];
+    if let Some(ref lh) = lh05 {
+        leaves.push((5, lh.clone()));
+    }
     leaves.sort_by(|a, b| {
         a.0.cmp(&b.0).then(
             hex::decode(&a.1).unwrap().cmp(&hex::decode(&b.1).unwrap())
@@ -126,7 +192,8 @@ fn main() {
             lh02: hex::encode(canonical_json(&attestation_payload).as_bytes()),
             lh03: hex::encode(canonical_json(&metadata_payload).as_bytes()),
         },
-        "signatures": [{"alg": "ed25519", "public_key": hex::encode(public_bytes), "signature": hex::encode(sig.to_bytes())}]
+        "signatures": [{"alg": "ed25519", "public_key": hex::encode(public_bytes), "signature": hex::encode(sig.to_bytes())}],
+        "timestamp_leaf": lh05.as_deref().unwrap_or("none")
     });
 
     let pack_name = format!("{}_v4_pack.json", artifact_name);
