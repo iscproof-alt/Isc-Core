@@ -54,6 +54,29 @@ fn hash_bytes(alg: &str, data: &[u8]) -> Result<Vec<u8>, V4Error> {
 }
 
 
+
+fn check_dns_trust(fingerprint: &str) -> Option<String> {
+    // Query _iscproof.<domain> TXT records for key trust
+    // Format: v=ISC1 fingerprint=<hex>
+    let domains = ["buildseal.io", "iscproof.io"];
+    for domain in &domains {
+        let query = format!("_iscproof.{}", domain);
+        let output = std::process::Command::new("dig")
+            .args(["+short", "TXT", &query])
+            .output();
+        if let Ok(out) = output {
+            let text = String::from_utf8_lossy(&out.stdout);
+            for line in text.lines() {
+                let clean = line.trim_matches('"');
+                if clean.starts_with("v=ISC1") && clean.contains(fingerprint) {
+                    return Some(format!("Key trust confirmed via DNS: {}", query));
+                }
+            }
+        }
+    }
+    None
+}
+
 fn verify_timestamp(tsr_hex: &str, root_hex: &str) -> Result<String, String> {
     // Basic RFC 3161 timestamp response validation
     // Checks: response is non-empty, is valid DER, contains a status field
@@ -193,6 +216,25 @@ fn verify_pack(path: &str) -> Result<(), V4Error> {
 
     if !sig_ok {
         return Err(V4Error::SignatureInvalid);
+    }
+
+    // DNS trust check
+    let pk_hex = pack["signatures"].as_array()
+        .and_then(|s| s.first())
+        .and_then(|s| s["public_key"].as_str())
+        .unwrap_or("");
+    let pk_bytes_check = hex::decode(pk_hex).unwrap_or_default();
+    let fp = if pk_bytes_check.len() == 32 {
+        use sha2::Digest;
+        let mut h = sha2::Sha256::new();
+        h.update(&pk_bytes_check);
+        hex::encode(h.finalize())[..16].to_string()
+    } else {
+        String::new()
+    };
+    match check_dns_trust(&fp) {
+        Some(msg) => println!("KEY TRUST : {}", msg),
+        None => println!("KEY TRUST : Not verified via DNS — resolve independently"),
     }
 
     // Step 8: timestamp leaf (0x05) — optional, advisory
