@@ -14,3 +14,6 @@ This file is the canonical navigation entrypoint for the ISC-CORE specification 
 - [EVIDENCE_BLOB](EVIDENCE_BLOB.md)
 - [ERROR_CODES](ERROR_CODES.md)
 - [MEMBRANE_PROTOCOLS](MEMBRANE_PROTOCOLS.md)
+
+## Architecture
+- [ARCHITECTURE](ARCHITECTURE.md)
