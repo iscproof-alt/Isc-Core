@@ -160,3 +160,17 @@ policy_hash_check:   VALID
 root:                b2233c69a54b166400a89ca0daa8d482992c23609bf9c16e8185813fa63232d8
 fingerprint:         a5ec97589519d9ee
 sealed_at:           2026-05-23T17:14:57Z
+
+## Test Vector 3 — Deterministic VEDM State Builder
+
+seal_id:             seal_1779557337748_j9qap0c8
+seal_version:        ISC_SEAL_V3
+epistemic_guarantee: true
+delta_H:             899613f78d65d125409b0db5c3ea67e649b4633776da24c9ed41087f4a7d9b70
+H_cumulative:        874434ecae78d375f639f368034f3055af7c7d64e0baef7f7d29b4c19e2d2202
+decay_policy:        vedm-0.1
+decay_policy_hash:   4ca8f54a6c9a4429f58adaa7d4b9ee86876c519785ed442cff04a9e7a9026a8e
+policy_hash_check:   VALID
+genesis_anchor:      ISC_VEDM_GENESIS_V0
+root:                1773719883739fb1b5da9a6bb0695d82425bdb4d6345582a8a58131f83c15c8f
+sealed_at:           2026-05-23T17:48:57Z
