@@ -146,3 +146,17 @@ fingerprint:         a5ec97589519d9ee
 sealed_at:           2026-05-23T12:02:25Z
 verify_url:          https://buildseal.io/verify?id=seal_1779537745159_kimb7ltv
 pack_url:            https://buildseal-api-production-3ca5.up.railway.app/pack/seal_1779537745159_kimb7ltv
+
+## Test Vector 2 — V3 Policy Hash Verified
+
+seal_id:             seal_1779555297219_kglb3ay6
+seal_version:        ISC_SEAL_V3
+epistemic_guarantee: true
+delta_H:             4ba7a1718d89b6940b398faaaf31046e50536e9882ac2499075973363919ca11
+H_cumulative:        755fd32b51eebf78d1d76a5aa0fc0be4c9b8e34bc5295d1585b8d0d9cb58d977
+decay_policy:        vedm-0.1
+decay_policy_hash:   4ca8f54a6c9a4429f58adaa7d4b9ee86876c519785ed442cff04a9e7a9026a8e
+policy_hash_check:   VALID
+root:                b2233c69a54b166400a89ca0daa8d482992c23609bf9c16e8185813fa63232d8
+fingerprint:         a5ec97589519d9ee
+sealed_at:           2026-05-23T17:14:57Z
