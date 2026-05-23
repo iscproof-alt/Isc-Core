@@ -130,3 +130,19 @@ Epistemic Inflation Attack:
 - ISC_SEAL_V2: SEAL_V2.md
 - VEDM Specification: VEDM-SPEC-v0.1.md (forthcoming)
 - Epistemic Decay Function: E_f(S) = T(S)·[1+α·ln(F_r)]·S_c / e^(λ·Δt)
+
+## Test Vector — Genesis V3 Seal
+
+seal_id:             seal_1779537745159_kimb7ltv
+seal_version:        ISC_SEAL_V3
+epistemic_guarantee: true
+delta_H:             f1e7e616ceb50ad13ed91d5df61220a5e11bf92f5862bde93f18f323a18c40f5
+H_cumulative:        fa5238d38fa18a67c976d70079352e049484d44fd0269702de80540dcc45916f
+decay_policy:        vedm-0.1
+decay_policy_hash:   595b57c068a875193c6614ab5779d2ecdb218009fb817c09254af5fb10ba2157
+root:                c40afeb5835798d1238f7cc0daaacde9a3df9dbd1e0183b37e3a32c0c40df4c8
+alg:                 ed25519
+fingerprint:         a5ec97589519d9ee
+sealed_at:           2026-05-23T12:02:25Z
+verify_url:          https://buildseal.io/verify?id=seal_1779537745159_kimb7ltv
+pack_url:            https://buildseal-api-production-3ca5.up.railway.app/pack/seal_1779537745159_kimb7ltv
