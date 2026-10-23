@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ISC — Verify an evidence record</title>
+<meta name="description" content="Retrieve a hosted verification result for a Proof ID and inspect the returned verification details.">
+<style>
+:root{--bg:#f4f5f2;--paper:#fff;--ink:#101614;--muted:#52615a;--line:#d5dad5;--green:#1f5f4a}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:25px}body{margin:0;color:var(--ink);background:var(--bg);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}a{color:var(--green);text-underline-offset:4px}button,input{font:inherit}.wrap{max-width:1200px;margin:auto;padding:0 28px}header{border-bottom:1px solid var(--line)}.nav{min-height:90px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{font:700 26px ui-monospace,monospace;letter-spacing:2px;color:var(--ink);text-decoration:none}.nav nav{display:flex;flex-wrap:wrap;gap:24px}.nav nav a{font-size:14px;text-decoration:none;color:var(--ink)}section{padding:72px 0}.hero{padding:85px 0 76px;max-width:1000px}.eyebrow{font:12px/1.5 ui-monospace,monospace;letter-spacing:1.6px;text-transform:uppercase;color:var(--green);margin-bottom:22px}h1{font-size:clamp(36px,5.3vw,66px);line-height:1.12;letter-spacing:-2px;font-weight:550;margin:0 0 25px}h2{font-size:clamp(27px,3.5vw,38px);line-height:1.2;letter-spacing:-1px;margin:0 0 18px;font-weight:550}h3{margin:0 0 12px;font-size:21px;font-weight:600}p{margin:0 0 18px}.lead{font-size:19px;color:var(--muted);max-width:830px}.buttons{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;min-height:46px;border:1px solid var(--ink);border-radius:4px;text-decoration:none;color:var(--ink);background:transparent;font-weight:550;cursor:pointer}.primary{background:var(--green);color:white;border-color:var(--green)}.band{background:var(--paper);border-block:1px solid var(--line)}.tag{display:inline-block;background:#f6ebdd;color:#6b3a00;font:11px/1.5 ui-monospace,monospace;letter-spacing:1px;padding:7px 10px;border-radius:3px;margin-bottom:18px}.inspector{display:grid;grid-template-columns:280px 1fr;gap:28px;margin-top:30px}.record-list{display:grid;gap:10px;align-content:start}.record{display:grid;text-align:left;gap:6px;padding:17px;background:white;border:1px solid var(--line);border-radius:4px;cursor:pointer}.record[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}.record small{font:11px ui-monospace,monospace;letter-spacing:1px}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px}.tabs button{border:1px solid var(--line);border-radius:4px;padding:10px 13px;background:white;cursor:pointer}.tabs button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:white}.detail{padding:24px;border:1px solid var(--line);border-radius:4px;min-height:330px;background:var(--bg)}.detail dl{margin:0}.detail dl div{padding:13px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:175px 1fr;gap:20px}dt{color:var(--muted);font-size:14px}dd{margin:0;font:13px/1.65 ui-monospace,monospace;overflow-wrap:anywhere}.small{font-size:13px;color:var(--muted)}.columns{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:28px}.card{border:1px solid var(--line);border-radius:4px;padding:25px;background:white}.card p{color:var(--muted)}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:28px}pre{margin:18px 0 0;padding:23px;background:#101614;color:#d8e4de;border-radius:4px;font:12px/1.8 ui-monospace,monospace;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}.hash{font:12px/1.8 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--muted)}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:500}.pass{color:var(--green);font-weight:650}.facts{display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;margin-top:28px}.facts>div{border-top:1px solid var(--line);padding-top:16px}.facts b{display:block;margin-bottom:6px}footer{padding:30px 0 45px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}:focus-visible{outline:3px solid #bf8a37;outline-offset:4px}section[id]{scroll-margin-top:25px}@media(max-width:760px){.wrap{padding:0 19px}.nav{align-items:flex-start;flex-direction:column;padding-block:20px;gap:15px}.nav nav{gap:12px 19px}.hero{padding:55px 0}h1{letter-spacing:-1px}section{padding:48px 0}.inspector,.columns,.twocol,.facts{grid-template-columns:1fr}.record-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.record{padding:12px 8px;font-size:12px}.record small{font-size:9px}.detail{padding:17px}.detail dl div{grid-template-columns:1fr;gap:5px}.lead{font-size:17px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+[hidden]{display:none!important}
+.lookup{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.lookup input{flex:1;min-width:200px;padding:13px;border:1px solid var(--line);border-radius:4px;background:white}
+.result{margin-top:30px;padding:25px;border:1px solid var(--line);border-radius:4px;background:white}
+.result dl>div{padding:14px 0;border-bottom:1px solid var(--line)}
+.result dd{margin-top:6px}
+#statusBadge{display:block;font:600 15px/1.6 ui-monospace,monospace;overflow-wrap:anywhere}
+</style>
+</head>
+<body><aside id="hosted-result-scope" class="small" style="max-width:1144px;margin:24px auto;padding:16px 20px;border:1px solid #d5dad5"><b>Hosted verification result</b><p>This page displays a result returned by the service. Your browser does not independently verify the package. For independent checking, use the applicable package, verifier and your expected signer key. The local demonstration kit has its own separate verification scope.</p></aside>
+<header><div class="wrap nav">
+<a class="brand" href="/">ISC</a>
+<nav aria-label="Main navigation">
+<a href="/#example">Example</a>
+<a href="/#downloads">Local verification kit</a>
+<a href="/spec">Documentation</a>
+</nav>
+</div></header>
+<main class="wrap">
+<section>
+<div class="eyebrow">Hosted verification</div>
+<h1>Verify an evidence record.</h1>
+<p class="lead">Enter a Proof ID to retrieve the verification result reported by BuildSeal.</p>
+
+<form method="get" action="/verify">
+<label for="proofInput">Proof ID</label>
+<div class="lookup">
+<input id="proofInput" name="id" placeholder="seal_…" required maxlength="200" autocomplete="off">
+<button class="btn primary" type="submit">Check record</button>
+</div>
+</form>
+
+<div class="result" id="resultBox" role="status" aria-live="polite" hidden>
+<strong id="statusBadge"></strong>
+<dl>
+<div><dt>Proof ID</dt><dd id="seal-id">—</dd></div>
+<div><dt>Root / artifact digest</dt><dd id="artifact-hash">—</dd></div>
+<div><dt>Recorded time</dt><dd id="sealed-at">—</dd></div>
+<div><dt>Issuer reported by the service</dt><dd id="issuer">—</dd></div>
+</dl>
+</div>
+
+<div id="detailBox" hidden style="margin-top:28px">
+<h2>Service verification details</h2>
+<p class="small">These details are returned by the hosted verifier. They are not recomputed by this browser.</p>
+<pre id="verify-detail"></pre>
+</div>
+
+<div class="card" style="margin-top:28px">
+<h3>Check independently</h3>
+<p>A hosted result depends on the service performing the check. For an independent check, use a local verifier with the appropriate evidence package and an explicitly trusted signer.</p>
+<a href="/#downloads">Download the demonstration verification kit →</a>
+<p class="small" style="margin-top:15px">The demonstration kit checks its signed manifest and file hashes. It does not supply an RFC 3161 timestamp or blockchain anchor.</p>
+</div>
+</section>
+</main>
+<footer><div class="wrap">iscproof.io · Hosted results and local verification are separate checks.</div></footer>
+<script>
+const API = 'https://buildseal-api-production-8d31.up.railway.app';
+const el = id => document.getElementById(id);
+
+async function load() {
+  const params = new URLSearchParams(location.search);
+  let id = params.get('id');
+  const last = location.pathname.split('/').filter(Boolean).pop();
+  if (!id && last && !['verify', 'verify.html'].includes(last)) id = last;
+  if (!id) return;
+
+  el('proofInput').value = id;
+  el('resultBox').hidden = false;
+
+  const status = text => {
+    el('statusBadge').textContent = text;
+  };
+
+  if (!/^[A-Za-z0-9_.:-]{1,200}$/.test(id)) {
+    status('INVALID PROOF ID');
+    return;
+  }
+
+  el('seal-id').textContent = id;
+  status('CHECKING SERVICE RESULT');
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const response = await fetch(
+      API + '/verify/' + encodeURIComponent(id),
+      { signal: controller.signal, cache: 'no-store' }
+    );
+
+    if (!response.ok) {
+      if (response.status === 404) status('RECORD NOT FOUND');
+      else if ([401, 403].includes(response.status)) status('SERVICE ACCESS REQUIRED');
+      else if (response.status === 429) status('SERVICE RATE LIMIT REACHED');
+      else status('SERVICE ERROR · HTTP ' + response.status);
+      return;
+    }
+
+    const data = await response.json();
+
+    if (data.seal_id !== id) {
+      status('RESPONSE ID MISMATCH');
+      return;
+    }
+
+    if (data.verdict === 'VALID') {
+      status('VALID · service verification passed');
+    } else if (data.verdict === 'INVALID') {
+      status('INVALID · service verification failed');
+    } else {
+      status('RECORD FOUND · LOCAL VERIFICATION REQUIRED');
+    }
+
+    el('artifact-hash').textContent =
+      data.root_hash || data.artifact_hash || 'Not provided';
+
+    const value = data.sealed_at || data.created_at;
+    const date = value ? new Date(value) : null;
+    el('sealed-at').textContent =
+      date && Number.isFinite(date.getTime())
+        ? date.toUTCString() : 'Not provided';
+
+    el('issuer').textContent = data.issuer || 'Not provided';
+
+    el('verify-detail').textContent =
+      data.verify_detail && typeof data.verify_detail === 'object'
+        ? JSON.stringify(data.verify_detail, null, 2)
+        : 'The service did not return detailed verification results.';
+
+    el('detailBox').hidden = false;
+
+  } catch (error) {
+    status(error.name === 'AbortError'
+      ? 'SERVICE REQUEST TIMED OUT'
+      : 'SERVICE UNAVAILABLE');
+  } finally {
+    clearTimeout(timer);
+  }
+}
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ISCProof — Verifiable Evidentiary Decision &amp; Memory</title>
+<meta name="description" content="A signature can prove that a decision record remained unchanged. It cannot prove that the evidence justified the decision." />
+<style>
+  :root{
+    --bg:#060807;
+    --panel:#0B0F0D;
+    --ink:#E6EAE7;
+    --muted:#8A938D;
+    --dim:#5E6862;
+    --rule:#1A211D;
+    --accent:#4ADE80;
+    --accent-dim:#8EF0AA;
+    --wash:rgba(74,222,128,.07);
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:radial-gradient(ellipse at 50% -10%, #0E1712 0%, #080A09 45%, var(--bg) 100%);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:17px;
+    line-height:1.68;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:47rem;margin:0 auto;padding:0 1.5rem}
+  a{color:var(--accent-dim);text-decoration:none;border-bottom:1px solid rgba(142,240,170,.28);padding-bottom:1px}
+  a:hover{border-bottom-color:var(--accent-dim)}
+  a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+  header{border-bottom:1px solid var(--rule)}
+  header .wrap{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding-top:1.15rem;padding-bottom:1.15rem}
+  .brand{font-family:var(--mono);letter-spacing:.18em;color:var(--accent-dim);font-size:.82rem;font-weight:700}
+  nav a{margin-left:1.4rem;color:var(--muted);font-size:.86rem;border-bottom:none}
+  nav a:hover{color:var(--ink)}
+
+  h1{
+    font-size:clamp(1.85rem,5vw,2.75rem);
+    line-height:1.16;
+    font-weight:600;
+    letter-spacing:-.02em;
+    margin:4rem 0 1.4rem;
+    max-width:19ch;
+  }
+  h2{font-size:1.15rem;font-weight:600;letter-spacing:-.01em;margin:3.6rem 0 .9rem}
+  p{margin:0 0 1.15rem;max-width:70ch}
+  .lead{font-size:1.12rem;color:var(--ink)}
+  .muted{color:var(--muted)}
+  .small{font-size:.92rem}
+
+  .chain{
+    font-family:var(--mono);font-size:.76rem;line-height:2.2;color:var(--dim);
+    border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+    padding:.65rem 0;margin:2.2rem 0 0;
+  }
+
+  .ledger{
+    font-family:var(--mono);font-size:.83rem;line-height:1.5;
+    background:var(--panel);border:1px solid var(--rule);border-radius:3px;
+    margin:1.7rem 0;overflow:hidden;
+  }
+  .ledger .case{
+    padding:.7rem 1rem;border-bottom:1px solid var(--rule);
+    color:var(--dim);letter-spacing:.1em;font-size:.72rem;
+  }
+  .row{display:grid;grid-template-columns:10.5rem 1fr 1fr;border-bottom:1px solid var(--rule)}
+  .row:last-child{border-bottom:0}
+  .row > *{padding:.58rem 1rem}
+  .row .k{color:var(--dim)}
+  .row .v{color:var(--muted)}
+  .row.head .v{color:var(--ink);font-weight:600}
+  .row.diff{background:var(--wash)}
+  .row.diff .k{color:var(--accent-dim)}
+  .row.diff .v{color:var(--accent);font-weight:600}
+  .row.out .v{color:var(--ink);font-weight:600}
+  @media (max-width:620px){
+    .row{grid-template-columns:1fr 1fr}
+    .row .k{grid-column:1 / -1;padding-bottom:.05rem;font-size:.72rem;letter-spacing:.06em}
+    .row > *{padding:.4rem 1rem}
+  }
+
+  .limits{border-left:2px solid var(--rule);padding-left:1.2rem;margin:2.2rem 0}
+  .limits p{margin-bottom:.55rem;color:var(--muted)}
+  .limits p:last-child{margin-bottom:0;color:var(--ink)}
+
+  code{font-family:var(--mono);font-size:.88em;color:var(--accent-dim)}
+
+  .below{border-top:1px solid var(--rule);margin-top:4.5rem;padding-top:2.6rem}
+  .prims{font-family:var(--mono);font-size:.76rem;color:var(--dim);letter-spacing:.08em;margin:1.2rem 0}
+  .links{margin-top:1.3rem;display:flex;flex-wrap:wrap;gap:1.5rem;font-size:.95rem}
+
+  footer{border-top:1px solid var(--rule);margin-top:4rem;padding:1.5rem 0 3.5rem;font-size:.82rem;color:var(--dim)}
+  footer .wrap{font-family:var(--mono);letter-spacing:.03em}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="brand">ISCPROOF</span>
+    <nav>
+      <a href="/c-017">C-017</a>
+      <a href="/verify">Verify</a>
+      <a href="/spec">Spec</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <h1>Cryptographic integrity is not enough for AI decisions.</h1>
+
+  <p class="lead">A signature can prove that a decision record remained unchanged. It cannot prove that the evidence justified the decision.</p>
+
+  <p>Most work in this area stops at integrity: hash the record, sign it, chain it, timestamp it. That is useful, and it is now widely available. It answers one question — is this the same record that was committed? It leaves a second question untouched: did the evidence support what was concluded, and should a conclusion reached yesterday constrain what a system is allowed to decide tomorrow?</p>
+
+  <p>VEDM — Verifiable Evidentiary Decision &amp; Memory — is an attempt at that second layer. It treats a seal as a commitment inside an evidentiary chain rather than the end of the process.</p>
+
+  <p class="chain">evidence &nbsp;&rarr;&nbsp; predicate &nbsp;&rarr;&nbsp; resolution &nbsp;&rarr;&nbsp; binding constraint &nbsp;&rarr;&nbsp; decision &nbsp;&rarr;&nbsp; commitment</p>
+
+  <h2>An ablation, not a diagram</h2>
+
+  <p>The distinction is only worth stating if it can be tested. The same decision was run twice. Everything was held fixed except whether a previously committed resolution was binding.</p>
+
+  <div class="ledger">
+    <div class="case">CASE C-017 — BINDING ABLATION</div>
+    <div class="row head"><span class="k"></span><span class="v">Run A</span><span class="v">Run B</span></div>
+    <div class="row"><span class="k">task</span><span class="v">identical</span><span class="v">identical</span></div>
+    <div class="row"><span class="k">evidence set</span><span class="v">identical</span><span class="v">identical</span></div>
+    <div class="row"><span class="k">model</span><span class="v">identical</span><span class="v">identical</span></div>
+    <div class="row diff"><span class="k">resolution</span><span class="v">non-binding</span><span class="v">binding</span></div>
+    <div class="row out"><span class="k">decision</span><span class="v">provider_a</span><span class="v">provider_b</span></div>
+  </div>
+
+  <p>The decision moved. The model was not instructed to weigh the earlier resolution more heavily. A deterministic layer outside the model evaluated the binding constraint and eliminated the non-compliant candidate before the model's output was accepted.</p>
+
+  <p><a href="/c-017">How the candidate was eliminated</a></p>
+
+  <div class="limits">
+    <p>This does not prove that <code>provider_b</code> is the correct decision.</p>
+    <p>It does not establish that binding historical resolutions improve decision quality in general.</p>
+    <p>It shows something narrower: a committed resolution can constrain the set of decisions available later — not by being retrieved as context, but by removing options before an answer is accepted.</p>
+  </div>
+
+  <section class="below">
+    <h2 style="margin-top:0">The integrity layer underneath</h2>
+
+    <p>VEDM addresses evidentiary semantics and binding decision state. ISCProof is the open format carrying the integrity guarantee beneath it: a portable evidence pack binding a content hash, a timestamp and a signature into one verifiable unit.</p>
+
+    <p class="prims">SHA-256 &nbsp;&nbsp; ED25519 &nbsp;&nbsp; RFC 3161 &nbsp;&nbsp; OFFLINE VERIFICATION</p>
+
+    <p class="muted small">Verify without trusting BuildSeal, ISCProof.io, or any hosted interface.</p>
+
+    <p class="links">
+      <a href="/spec">Read the specification</a>
+      <a href="/verify">Verify a proof</a>
+      <a href="/protocol">Protocol overview</a>
+    </p>
+
+    <p class="muted small" style="margin-top:2rem">Cryptographic sealing of the C-017 record is a separate release, published when the canonical record and its verification path are ready. This page is about the evidentiary claim, not the seal.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">iscproof.io — open specification, open source verifier, independently verifiable</div>
+</footer>
+
+</body>
+</html>

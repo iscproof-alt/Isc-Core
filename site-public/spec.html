@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ISCProof Specification v5.1</title>
+<style>
+  body { font-family: monospace; background: #0a0a0a; color: #e0e0e0; margin: 0; padding: 40px; line-height: 1.7; }
+  .container { max-width: 760px; margin: 0 auto; }
+  h1 { color: #4ade80; font-size: 1.4em; margin-bottom: 4px; }
+  h2 { color: #4ade80; font-size: 1em; margin-top: 40px; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; }
+  h3 { color: #86efac; font-size: 0.9em; margin-top: 24px; }
+  .subtitle { color: #666; margin-bottom: 40px; font-size: 0.85em; }
+  code { background: #111; border: 1px solid #2a2a2a; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; color: #86efac; }
+  pre { background: #111; border: 1px solid #2a2a2a; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 0.82em; color: #e0e0e0; }
+  .must { color: #f87171; font-weight: bold; }
+  .should { color: #fbbf24; font-weight: bold; }
+  .may { color: #888; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.85em; }
+  th { text-align: left; color: #888; border-bottom: 1px solid #2a2a2a; padding: 6px 8px; }
+  td { padding: 6px 8px; border-bottom: 1px solid #1a1a1a; }
+  .footer { color: #444; font-size: 0.75em; margin-top: 60px; }
+  a { color: #4ade80; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>ISCProof Specification</h1>
+  <p class="subtitle">Version 5.1 — April 2026 — <a href="https://iscproof.io">iscproof.io</a></p>
+
+  <h2>1. Overview</h2>
+  <p>ISCProof defines a protocol for generating portable, verifiable artifact evidence packs. A pack binds a content hash, a timestamp, and a cryptographic signature into a single verifiable unit.</p>
+
+  <h2>2. Pack Schema</h2>
+  <pre>{
+  "pack_version": "5.1",       // string, MUST be present
+  "version": 5,                // integer, MUST be >= 5
+  "profile": "iscproof/document",
+  "content_id": "...",         // unique identifier
+  "content_hash": {
+    "alg": "sha256",
+    "digest": "..."            // hex-encoded SHA-256 of content
+  },
+  "parent": "",                // hash of parent pack or empty
+  "claims": [],                // array, extensible
+  "sealed_at": "2026-04-08T..Z", // ISO 8601 UTC
+  "root": "...",               // hex SHA-256 of canonical payload
+  "signatures": [{
+    "alg": "ed25519",
+    "public_key": "...",       // hex
+    "fingerprint": "...",      // first 8 bytes of sha256(public_key)
+    "signature": "..."         // hex ed25519 signature over root bytes
+  }],
+  "tsa": {                     // SHOULD be present
+    "present": true,
+    "provider": "freetsa",
+    "time": "2026-04-08T..Z",
+    "algorithm": "sha256",
+    "token_b64": "..."         // base64 RFC 3161 timestamp token
+  }
+}</pre>
+
+  <h2>3. Canonicalization</h2>
+  <p>The canonical payload is computed as follows:</p>
+  <p><span class="must">MUST</span> set <code>root</code> to empty string <code>""</code></p>
+  <p><span class="must">MUST</span> set <code>signatures[0].signature</code> to empty string <code>""</code></p>
+  <p><span class="must">MUST</span> remove <code>tsa</code> field if present</p>
+  <p><span class="must">MUST</span> serialize with <code>serde_json::to_string()</code> (alphabetical key order)</p>
+  <pre>canonical_payload = JSON(pack, root="", signature="", no tsa)
+root = sha256(canonical_payload)</pre>
+
+  <h2>4. Signing</h2>
+  <p><span class="must">MUST</span> use ed25519</p>
+  <p><span class="must">MUST</span> sign <code>hex_decode(root)</code> — the 32-byte hash, not the hex string</p>
+  <pre>signature = ed25519_sign(private_key, hex_decode(root))</pre>
+
+  <h2>5. Verification Algorithm</h2>
+  <p>A verifier <span class="must">MUST</span> perform these checks in order:</p>
+  <table>
+    <tr><th>Step</th><th>Check</th><th>Error Code</th></tr>
+    <tr><td>1</td><td>Pack is valid JSON</td><td><code>PACK_CORRUPT</code></td></tr>
+    <tr><td>2</td><td>version >= 5</td><td><code>UNSUPPORTED_VERSION</code></td></tr>
+    <tr><td>3</td><td>Recompute root, compare to stored</td><td><code>ROOT_MISMATCH</code></td></tr>
+    <tr><td>4</td><td>Verify ed25519 signature over root bytes</td><td><code>SIGNATURE_INVALID</code></td></tr>
+    <tr><td>5</td><td>Verify RFC 3161 TSA token (if present)</td><td><code>TSA_INVALID</code></td></tr>
+  </table>
+
+  <h2>6. Error Codes</h2>
+  <table>
+    <tr><th>Code</th><th>Meaning</th></tr>
+    <tr><td><code>PACK_CORRUPT</code></td><td>Pack cannot be parsed as JSON</td></tr>
+    <tr><td><code>UNSUPPORTED_VERSION</code></td><td>Pack version < 5</td></tr>
+    <tr><td><code>ROOT_MISMATCH</code></td><td>Recomputed root does not match stored root</td></tr>
+    <tr><td><code>SIGNATURE_INVALID</code></td><td>ed25519 signature verification failed</td></tr>
+    <tr><td><code>TSA_MISSING</code></td><td>TSA token not present in pack</td></tr>
+    <tr><td><code>TSA_INVALID</code></td><td>TSA token failed RFC 3161 verification</td></tr>
+    <tr><td><code>SEAL_NOT_FOUND</code></td><td>No seal record found for given identifier</td></tr>
+  </table>
+
+  <h2>7. Trust Model</h2>
+  <p>Signing keys are published at <a href="https://iscproof.io/keys">iscproof.io/keys</a>.</p>
+  <p>A verifier <span class="should">SHOULD</span> check the signing key fingerprint against the published registry.</p>
+  <p>TSA tokens <span class="should">SHOULD</span> be verified against the TSA provider's certificate chain.</p>
+
+  <h2>8. Guarantees</h2>
+  <p>ISCProof guarantees:</p>
+  <p>✓ This content existed at this time</p>
+  <p>✓ This content has not been modified since sealing</p>
+  <p>✓ The time was independently confirmed by a third-party TSA</p>
+  <p>ISCProof does not guarantee:</p>
+  <p>✗ The identity of who created the seal</p>
+  <p>✗ The correctness or quality of the content</p>
+
+  <div class="footer">
+    ISCProof Specification v5.1 — iscproof.io — trust nothing, verify everything
+  </div>
+</div>
+</body>
+</html>

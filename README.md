@@ -1,142 +1,100 @@
-# BuildSeal
+# ISCProof — verifiable decision records
 
-BuildSeal is a portable software integrity verification system.
+When a decision is questioned, show the record—and check that its packaged files have not changed since the manifest was signed.
 
-It seals build artifacts into a cryptographically signed evidence pack that can be verified later without trusting the original server, repository, CI system, or BuildSeal itself.
+ISCProof describes evidence formats and verification workflows. This repository includes protocol specifications, packers, verifiers and demonstration material. BuildSeal is a related product that issues ISCProof-compatible evidence.
 
-Verification is self-contained, offline-capable, and long-term reproducible.
+**Start here:** [Inspect the example](https://www.iscproof.io/#example) · [Download and verify](https://www.iscproof.io/#downloads) · [Look up a Proof ID](https://www.iscproof.io/verify) · [Demo checksums and test results](docs/releases/isc-site-demo-v1.md)
 
-The goal of BuildSeal is simple:
+## What the published demonstration checks
 
-Anyone should be able to verify
-what was built,
-when it was built,
-and by whom it was built —
+The `isc-site-demo-v1` profile contains three illustrative decision/policy records and a signed file manifest. These are demonstration records, not customer data or a live AI execution.
 
-using only the artifact and the evidence pack.
+The included verifier checks file hashes against the manifest and verifies the manifest signature against an explicitly supplied demo signer key. It rejects the four tested forms of incomplete or modified evidence below.
 
-No registry.
-No API.
-No vendor trust.
-Only cryptographic proof.
+It does **not** establish:
 
+- Whether the recorded facts were accurate or the policy was actually in force.
+- Whether a decision was correct or justified.
+- The meaning or validity of the links between records.
+- When the package was created or signed: this demonstration has no RFC 3161 timestamp or blockchain anchor. Dates in the files are signer-stated.
+- An independently certified issuer identity: the supplied key identifies the public demonstration.
 
-## Quick start
+The verifier's internal package-identity calculation is separate from the SHA-256 checksum of the downloadable TAR archive.
 
-Download verifier:
+## Verify locally
 
-https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify
+The demonstration uses a verifier based on **v0.2.0 with local fixes and `--trusted-signers` support**. Use the exact included source snapshot rather than assuming that another v0.2.0 executable is identical.
 
-Make executable:
-chmod +x isc_verify
-Download example evidence pack:
+### Build from the included source
 
-https://verify.buildseal.io/release/seal_1772887285176_trxc9ufi
+Rust and Cargo are required. From this repository:
 
-Verify:
-./isc_verify evidence_pack.tar
-Result:
-Genuine   -> artifact matches sealed build
-Modified  -> artifact differs from sealed build
-## Overview
+```bash
+cargo build --release --locked --manifest-path demos/site_v1/verifier-source/Cargo.toml
+./demos/site_v1/verifier-source/target/release/isc_verify \
+  demos/site_v1/evidence_pack.tar \
+  --trusted-signers demos/site_v1/trusted_signers
+```
 
-BuildSeal produces a self-contained proof bundle.
+Expected successful result: `PACK VERIFIED`, exit code `0`.
 
-Each evidence pack contains:
+After extracting the [downloadable kit](https://www.iscproof.io/downloads/isc-demo-kit.zip), the same source is under `verifier-source/`, with the package and signer list in the kit's root directory.
 
-- artifact hash
-- signature
-- build metadata (repository, commit, timestamp)
-- governance key
-- verification policy
+Building with `--locked` avoids relying on the prebuilt executable and preserves dependency resolution. It still relies on the source, compiler and dependencies; it is not a guarantee of correctness or reproducible binary output. The initial build may need network access to obtain dependencies.
 
-Proof travels with the artifact.
+### Use the prebuilt Linux executable
 
-Verification works:
+The [published executable](https://www.iscproof.io/downloads/isc_verify-linux-x86_64) is for **Linux x86-64**, dynamically linked, and requires **glibc 2.34 or later** and compatible system libraries. It is not a Windows or macOS executable.
 
-- offline
-- without API calls
-- without registry
-- without network access
-- without trusting BuildSeal
+From a checkout containing the published website files:
 
-If the evidence pack exists, verification is possible.
+```bash
+chmod +x site-public/downloads/isc_verify-linux-x86_64
+./site-public/downloads/isc_verify-linux-x86_64 \
+  site-public/downloads/evidence_pack.tar \
+  --trusted-signers site-public/downloads/trusted_signers
+```
 
+Compare the executable, archive and verifier-source hashes with the [published checksum note](docs/releases/isc-site-demo-v1.md). The website and repository are project-controlled distribution channels, not independent certification. For another issuer's evidence, obtain the expected signer key through a channel you trust.
 
-## Use cases
+## Published internal tests
 
-- software supply chain verification
-- release integrity validation
-- audit evidence packs
-- reproducible build workflows
-- security-sensitive environments
-- air-gapped infrastructure
+| Case | Expected result | Exit |
+| --- | --- | --- |
+| `valid` | `PACK VERIFIED` | 0 |
+| `changed-content` | `HASH_MISMATCH` | 1 |
+| `missing-file` | `MISSING_FILE` | 1 |
+| `missing-signature` | `MISSING_FILE` | 1 |
+| `rewritten-manifest` | `SIGNATURE_INVALID` | 1 |
 
+These are five project-run fixture cases: one acceptance case and four rejection cases. The [report](demos/site_v1/report.json) and individual logs record those results. They are not a third-party audit or a general conformance certification.
 
-## Design Principles
+## Hosted Proof ID lookup
 
-No central trust required
-Verification must work offline
-Proof must be portable
-Artifacts must be self-verifiable
-Failure must be obvious
+[The website lookup](https://www.iscproof.io/verify) displays a result returned by a hosted service. The browser does not independently verify the package. For independent checking, use the applicable package, verifier and expected signer key.
 
-If verification requires trusting a server,
-it is not verification.
+The hosted service and other protocol versions may expose checks beyond this demonstration. Their results and trust requirements must be evaluated separately; this fixture does not demonstrate the full ISCProof stack.
 
-If proof cannot be moved,
-it is not proof.
+## Repository map
 
-If integrity cannot be checked locally,
-it is not integrity.
+| Path | Purpose |
+| --- | --- |
+| `site-public/` | Published static website and curated public downloads |
+| `demos/site_v1/` | Signed demonstration, exact source snapshot and recorded test outputs |
+| `isc_verify/` | Standalone verifier source aligned with the demonstration snapshot |
+| `docs/releases/isc-site-demo-v1.md` | Demo hashes, compatibility information and test summary |
+| `spec/` | Protocol and format documents; consult each document's version and scope |
+| `docs/` | Architecture, security and supporting documentation |
 
+Older packers, verifier versions and fixtures are retained as historical or separate development material. They are not interchangeable with the current demo profile merely because they share the ISC name.
 
-## What BuildSeal is NOT
+## Maintenance and integration
 
-BuildSeal is not a CI system
-BuildSeal is not a package registry
-BuildSeal is not a signing service
-BuildSeal is not a blockchain project
+Maintained by Hakan Ünal. For technical questions or integration discussions, [open an issue](https://github.com/iscproof-alt/Isc-Core/issues).
 
-BuildSeal is a self-contained verification tool.
-
-
-## Verification Engine
-
-BuildSeal uses the ISC (Integrity Seal Chain) engine.
-
-ISC provides:
-
-- Ed25519 signatures
-- deterministic sealing
-- portable evidence packs
-- policy-based verification
-- offline trust model
-
-Verification output is binary:
-
-- Genuine
-- Modified
-
-
-## Independent verification
-
-Verification does not require trusting BuildSeal.
-
-Download verifier:
-
-https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify
-
-Example:
-curl -L https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify -o isc_verify
-chmod +x isc_verify
-./isc_verify evidence_pack.tar
-The result must match the web report.
-
-If the result differs,
-the artifact must not be trusted.
-
+Bring one decision flow. We can identify what the proposed evidence can attest to, what must be trusted externally and what remains outside verification.
 
 ## License
 
-MIT
+See [LICENSE](LICENSE). The repository currently states **All Rights Reserved** and is published for review and discussion. Public visibility does not grant an MIT license or unrestricted rights to use or redistribute the software. This documentation update does not change the license.

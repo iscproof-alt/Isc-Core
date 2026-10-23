@@ -149,7 +149,11 @@ fn extract_outputs_from_pack(pack_path: &Path) -> Result<Vec<String>, VerifyErro
     let tmp = tempfile::tempdir().map_err(|e| VerifyError::IoError(e.to_string()))?;
     extract_tar(pack_path, tmp.path())?;
     let ci = tmp.path().join("artifacts/ci_report.json");
-    if !ci.exists() { return Ok(vec![]); }
+    if !ci.exists() {
+        return Err(VerifyError::MissingFile(
+            "Parent artifacts/ci_report.json".to_string()
+        ));
+    }
     let raw = fs::read(&ci).map_err(|e| VerifyError::IoError(e.to_string()))?;
     let v: serde_json::Value = serde_json::from_slice(&raw)
         .map_err(|e| VerifyError::ParseError(e.to_string()))?;
@@ -186,8 +190,17 @@ fn verify_lineage(ci_json: &serde_json::Value, pack_dir: &Path) -> Result<bool, 
         // Look for parent pack file
         let parent_pack = pack_dir.join(format!("{}.tar", parent_hash.trim_start_matches("sha256:")));
         if !parent_pack.exists() {
-            eprintln!("  WARN: parent pack not found: {} ({})", parent_hash, parent_event);
-            continue;
+            return Err(VerifyError::LineageError(format!(
+                "Parent pack missing: {} ({})", parent_hash, parent_event
+            )));
+        }
+
+        let expected_parent_hash = parent_hash.trim_start_matches("sha256:");
+        let actual_parent_hash = sha256_file(&parent_pack)?;
+        if actual_parent_hash != expected_parent_hash {
+            return Err(VerifyError::LineageError(format!(
+                "Parent pack hash mismatch: {}", parent_hash
+            )));
         }
 
         let parent_outputs = extract_outputs_from_pack(&parent_pack)?;
@@ -200,13 +213,13 @@ fn verify_lineage(ci_json: &serde_json::Value, pack_dir: &Path) -> Result<bool, 
                 )));
             }
         }
-        println!("  Lineage:          parent '{}' verified", parent_event);
+        println!("  Lineage:          parent '{}' hash and output links checked", parent_event);
     }
 
     Ok(true)
 }
 
-fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Result<(), VerifyError> {
+fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str, trusted_signers: Option<&Path>) -> Result<(), VerifyError> {
     let tmp = tempfile::tempdir().map_err(|e| VerifyError::IoError(e.to_string()))?;
     extract_tar(pack_path, tmp.path())?;
     let base = tmp.path().to_path_buf();
@@ -229,8 +242,7 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
         if rel_path.ends_with(&manifest_name) { continue; }
         let file_path = base.join(rel_path);
         if !file_path.exists() {
-            eprintln!("  WARN: missing file: {}", rel_path);
-            continue;
+            return Err(VerifyError::MissingFile(rel_path.clone()));
         }
         let computed = sha256_file(&file_path)?;
         if &computed != expected_hash {
@@ -254,7 +266,12 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
     };
     let ci_raw = fs::read(&ci_report_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
     let ci_json: serde_json::Value = serde_json::from_slice(&ci_raw)
-        .unwrap_or(serde_json::Value::Object(Default::default()));
+        .map_err(|e| VerifyError::ParseError(e.to_string()))?;
+    if !ci_json.is_object() {
+        return Err(VerifyError::ParseError(
+            "ci_report must be a JSON object".to_string()
+        ));
+    }
 
     let stripped_json = {
         let mut m = ci_json.as_object().cloned().unwrap_or_default();
@@ -280,6 +297,23 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
     }
     println!("Pack identity:      valid");
 
+    if let Some(signers_file) = trusted_signers {
+        let trusted_keys = parse_allowed_signers(signers_file)?;
+        if trusted_keys.is_empty() {
+            return Err(VerifyError::SignatureError(
+                "Trusted signer list is empty".to_string()
+            ));
+        }
+        let manifest_signature = base.join("artifacts/manifest.sig");
+        if !manifest_signature.exists() {
+            return Err(VerifyError::MissingFile(
+                "artifacts/manifest.sig".to_string()
+            ));
+        }
+        verify_signature(&manifest_signature, &manifest_path, &trusted_keys)?;
+        println!("Manifest signature: valid (external trusted signer)");
+    }
+
     // Governance
     let gov_signers_path = base.join("artifacts/governance/governance_allowed_signers");
     if !gov_signers_path.exists() {
@@ -304,7 +338,7 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
         ("artifacts/governance/revocation_record_hash.txt.sig",
          "artifacts/governance/revocation_record_hash.txt"),
     ];
-    let mut sig_count = 0;
+    let mut sig_count = if trusted_signers.is_some() { 1 } else { 0 };
     for (sig_rel, payload_rel) in &gov_sigs {
         let sig_path = base.join(sig_rel);
         if !sig_path.exists() { continue; }
@@ -325,16 +359,18 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str) -> Res
     // Lineage
     let pack_dir = pack_path.parent().unwrap_or(Path::new("."));
     match verify_lineage(&ci_json, pack_dir)? {
-        true => println!("Lineage:            valid"),
+        true => println!("Lineage:            parent hashes and output links checked"),
         false => println!("Lineage:            skipped (V1 pack, no parents)"),
     }
 
     // Anchor
     if verify_anchor_flag {
         let _ = (pack_hash, rpc_url);
-        println!("Anchor:             not yet implemented");
+        return Err(VerifyError::AnchorError(
+            "On-chain anchor verification is not implemented in this verifier".to_string()
+        ));
     } else {
-        println!("Anchor:             skipped (use --verify-anchor to check on-chain)");
+        println!("Anchor:             not checked (unsupported)");
     }
 
     Ok(())
@@ -368,7 +404,17 @@ fn main() {
         process::exit(1);
     }
 
-    match verify_pack(pack_path, verify_anchor_flag, rpc_url) {
+    let trusted_signers = match args.iter().position(|a| a == "--trusted-signers") {
+        Some(i) => match args.get(i + 1) {
+            Some(p) if !p.starts_with("--") => Some(Path::new(p)),
+            _ => {
+                eprintln!("--trusted-signers requires a file path");
+                process::exit(2);
+            }
+        },
+        None => None,
+    };
+    match verify_pack(pack_path, verify_anchor_flag, rpc_url, trusted_signers) {
         Ok(()) => {
             println!("\nPACK VERIFIED");
             process::exit(0);

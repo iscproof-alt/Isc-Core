@@ -1,129 +1,79 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>BuildSeal Verification Report</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ISC — Inspect the evidence</title><meta name="description" content="Inspect decision records, download a signed demonstration package and verify it locally with ISC.">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:20px}
-.card{background:#161b22;border:1px solid #30363d;border-radius:8px;max-width:620px;margin:20px auto;overflow:hidden}
-.header{padding:16px;border-bottom:1px solid #30363d}
-.header h1{font-size:13px;font-weight:700;color:#e6edf3;letter-spacing:2px}
-.header p{font-size:11px;color:#8b949e;margin-top:4px}
-.status-row{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #30363d}
-.badge{padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:1px}
-.badge.ok{background:#1a4731;color:#3fb950;border:1px solid #238636}
-.badge.bad{background:#2d1a1a;color:#f85149;border:1px solid #da3633}
-.badge.loading{background:#21262d;color:#8b949e;border:1px solid #30363d}
-.row{padding:10px 16px;border-bottom:1px solid #21262d;display:flex;gap:12px}
-.k{font-size:11px;color:#8b949e;min-width:140px;flex-shrink:0}
-.v{font-size:12px;color:#e6edf3;word-break:break-all}
-.v a{color:#58a6ff;text-decoration:none}
-.actions{padding:16px;border-top:1px solid #30363d;display:flex;flex-direction:column;gap:10px}
-.btn{display:block;padding:10px 16px;border-radius:6px;font-size:12px;font-weight:600;text-align:center;text-decoration:none;cursor:pointer;border:none;font-family:monospace}
-.btn-primary{background:#238636;color:#fff}
-.btn-secondary{background:#21262d;color:#c9d1d9;border:1px solid #30363d}
-.footer{padding:12px 16px;border-top:1px solid #30363d;font-size:11px;color:#484f58;text-align:center}
-.footer a{color:#8b949e;text-decoration:none}
-.independent{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px;margin:0 16px 16px;font-size:11px;color:#8b949e}
-.independent code{color:#3fb950;font-size:11px}
-</style>
-</head>
-<body>
-<div class="card">
-  <div class="header">
-    <h1>BUILDSEAL VERIFICATION REPORT</h1>
-    <p id="generated"></p>
-  </div>
-  <div class="status-row">
-    <span class="k">STATUS</span>
-    <span class="badge loading" id="badge">LOADING...</span>
-  </div>
-  <div class="row"><div class="k">Seal ID</div><div class="v" id="sealId">—</div></div>
-  <div class="row"><div class="k">Artifact Hash</div><div class="v" id="artifactHash">—</div></div>
-  <div class="row"><div class="k">Repository</div><div class="v" id="repo">—</div></div>
-  <div class="row"><div class="k">Commit</div><div class="v" id="commit">—</div></div>
-  <div class="row"><div class="k">Sealed At</div><div class="v" id="createdAt">—</div></div>
-  <div class="row"><div class="k">Governance</div><div class="v" id="governance">Ed25519 — ISC Core</div></div>
+:root{--bg:#f4f5f2;--paper:#fff;--ink:#101614;--muted:#52615a;--line:#d5dad5;--green:#1f5f4a}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:25px}body{margin:0;color:var(--ink);background:var(--bg);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}a{color:var(--green);text-underline-offset:4px}button,input{font:inherit}.wrap{max-width:1200px;margin:auto;padding:0 28px}header{border-bottom:1px solid var(--line)}.nav{min-height:90px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{font:700 26px ui-monospace,monospace;letter-spacing:2px;color:var(--ink);text-decoration:none}.nav nav{display:flex;flex-wrap:wrap;gap:24px}.nav nav a{font-size:14px;text-decoration:none;color:var(--ink)}section{padding:72px 0}.hero{padding:85px 0 76px;max-width:1000px}.eyebrow{font:12px/1.5 ui-monospace,monospace;letter-spacing:1.6px;text-transform:uppercase;color:var(--green);margin-bottom:22px}h1{font-size:clamp(36px,5.3vw,66px);line-height:1.12;letter-spacing:-2px;font-weight:550;margin:0 0 25px}h2{font-size:clamp(27px,3.5vw,38px);line-height:1.2;letter-spacing:-1px;margin:0 0 18px;font-weight:550}h3{margin:0 0 12px;font-size:21px;font-weight:600}p{margin:0 0 18px}.lead{font-size:19px;color:var(--muted);max-width:830px}.buttons{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 20px;min-height:46px;border:1px solid var(--ink);border-radius:4px;text-decoration:none;color:var(--ink);background:transparent;font-weight:550;cursor:pointer}.primary{background:var(--green);color:white;border-color:var(--green)}.band{background:var(--paper);border-block:1px solid var(--line)}.tag{display:inline-block;background:#f6ebdd;color:#6b3a00;font:11px/1.5 ui-monospace,monospace;letter-spacing:1px;padding:7px 10px;border-radius:3px;margin-bottom:18px}.inspector{display:grid;grid-template-columns:280px 1fr;gap:28px;margin-top:30px}.record-list{display:grid;gap:10px;align-content:start}.record{display:grid;text-align:left;gap:6px;padding:17px;background:white;border:1px solid var(--line);border-radius:4px;cursor:pointer}.record[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}.record small{font:11px ui-monospace,monospace;letter-spacing:1px}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px}.tabs button{border:1px solid var(--line);border-radius:4px;padding:10px 13px;background:white;cursor:pointer}.tabs button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:white}.detail{padding:24px;border:1px solid var(--line);border-radius:4px;min-height:330px;background:var(--bg)}.detail dl{margin:0}.detail dl div{padding:13px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:175px 1fr;gap:20px}dt{color:var(--muted);font-size:14px}dd{margin:0;font:13px/1.65 ui-monospace,monospace;overflow-wrap:anywhere}.small{font-size:13px;color:var(--muted)}.columns{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:28px}.card{border:1px solid var(--line);border-radius:4px;padding:25px;background:white}.card p{color:var(--muted)}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:28px}pre{margin:18px 0 0;padding:23px;background:#101614;color:#d8e4de;border-radius:4px;font:12px/1.8 ui-monospace,monospace;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}.hash{font:12px/1.8 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--muted)}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:500}.pass{color:var(--green);font-weight:650}.facts{display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;margin-top:28px}.facts>div{border-top:1px solid var(--line);padding-top:16px}.facts b{display:block;margin-bottom:6px}footer{padding:30px 0 45px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}:focus-visible{outline:3px solid #bf8a37;outline-offset:4px}section[id]{scroll-margin-top:25px}@media(max-width:760px){.wrap{padding:0 19px}.nav{align-items:flex-start;flex-direction:column;padding-block:20px;gap:15px}.nav nav{gap:12px 19px}.hero{padding:55px 0}h1{letter-spacing:-1px}section{padding:48px 0}.inspector,.columns,.twocol,.facts{grid-template-columns:1fr}.record-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.record{padding:12px 8px;font-size:12px}.record small{font-size:9px}.detail{padding:17px}.detail dl div{grid-template-columns:1fr;gap:5px}.lead{font-size:17px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style><style id="isc-final-layout">.scope-note{border-left:3px solid var(--green);padding:16px 20px;margin-top:30px;background:var(--paper)}.scope-note p{margin:8px 0 0;color:var(--muted);font-size:14px}.card ul{padding-left:20px;color:var(--muted)}.card li+li{margin-top:12px}.facts>div{min-width:0;overflow-wrap:anywhere}summary{cursor:pointer;font-weight:600}.detail>a{display:inline-block;margin-top:18px}h1{font-size:clamp(34px,4.6vw,58px)}@media(max-width:760px){.nav nav{display:grid;grid-template-columns:repeat(5,auto);gap:8px;width:100%;justify-content:space-between}.nav nav a{font-size:12px}.hero{padding:40px 0}.scope-note{padding:12px 15px}}@media(max-width:340px){.nav nav{grid-template-columns:repeat(3,auto);justify-content:start;gap:10px 18px}}</style><style>@media(max-width:760px){.nav nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 16px}}</style></head><body id="top"><header><div class="wrap nav"><a class="brand" href="/">ISC</a><nav aria-label="Main navigation"><a href="#example">Example</a><a href="/verify">Verify</a><a href="/spec">Docs</a><a href="https://codeberg.org/Buildseal/Isc-Core">Codeberg</a><a href="https://github.com/iscproof-alt/Isc-Core">GitHub</a><a href="#contact">Contact</a></nav></div></header>
+<main><div class="wrap"><section class="hero"><div class="eyebrow">Verifiable decision records</div>
+<h1>When a decision is questioned, show the record.<br>And show it hasn’t changed since it was signed.</h1>
+<p class="lead">ISC packages decision records and their recorded inputs, policy versions or references into signed evidence files. Download the example and check its file hashes and manifest signature on your own machine.</p>
+<div class="buttons"><a class="btn primary" href="#example">Inspect the example</a><a class="btn" href="/verify">I have a Proof ID</a></div>
+<p style="margin-top:18px"><a href="#contact">Using this in your system →</a></p>
+<aside class="scope-note"><b>A record of what was captured—not proof that it was true.</b><p>Verification checks the packaged files against a signed manifest. It does not establish that the recorded policy was in force, that the inputs were accurate or that the decision was correct. This demonstration includes no independently verified signing or creation time.</p></aside></section></div>
+<div class="band"><section class="wrap" id="example"><div class="tag">ILLUSTRATIVE SCENARIO · REAL SIGNED FILES</div><h2>Same request. Different recorded limits. Different decisions.</h2><p class="lead">A request for 3,000 is approved under a limit of 5,000. The limit changes to 2,000; the same request is then rejected. These are demonstration records, not customer data or a live AI execution.</p><div class="inspector"><div id="records" class="record-list" aria-label="Choose a record"></div><div><div id="tabs" class="tabs" aria-label="Inspection views"></div><div id="detail" class="detail" aria-live="polite"></div></div></div><p class="small" style="margin-top:20px">The verifier checks the signed manifest and file hashes. This example does not test decision correctness or enforce the meaning of the links between records.</p></section></div>
+<section class="wrap" id="scope"><div class="eyebrow">Verification scope</div><h2>Know what was checked.</h2>
+<div class="twocol"><article class="card"><h3>ISC checks in this example</h3><ul>
+<li>Whether the listed files match their manifest hashes.</li>
+<li>Whether the manifest signature verifies against the explicitly supplied demo signer key.</li>
+<li>Acceptance and rejection in the five published test cases: valid, changed-content, missing-file, missing-signature and rewritten-manifest.</li>
+</ul></article><article class="card"><h3>ISC does not check in this example</h3><ul>
+<li>Whether the recorded facts are accurate or a policy was actually in force.</li>
+<li>Whether a decision was correct or justified.</li>
+<li>The meaning or validity of relationships between records.</li>
+<li>When the package was created or signed. Dates inside the files are signer-stated, not independently timestamped.</li>
+</ul></article></div><p class="small" style="margin-top:20px">No RFC 3161 timestamp or blockchain anchor is included. The demo key identifies this demonstration; it does not independently establish the issuer’s identity. The TAR archive SHA-256 shown below is a separate download checksum, not the verifier’s internal package-identity calculation.</p></section><section class="wrap" id="downloads"><div class="eyebrow">Download and verify</div>
+<h2>Check the package on your own machine.</h2><p class="lead">The kit includes the evidence archive, demo signer list, exact verifier source snapshot, records and internal test outputs.</p>
+<div class="buttons"><a class="btn primary" download href="/downloads/isc_verify-linux-x86_64">Linux x86-64 verifier</a><a class="btn" download href="/downloads/isc-demo-kit.zip">Complete verification kit</a><a class="btn" download href="/downloads/evidence_pack.tar">Evidence package</a><a class="btn" download href="/downloads/trusted_signers">Demo signer list</a></div>
+<p class="small" style="margin-top:16px">Prebuilt binary: Linux x86-64, dynamically linked; requires glibc 2.34 or later and compatible system libraries. It is not a Windows or macOS executable.</p>
+<div class="twocol"><div><h3>Run the Linux binary</h3><p class="small">Place the binary, evidence package and signer list in the same directory. Then run:</p>
+<pre>chmod +x isc_verify-linux-x86_64
+./isc_verify-linux-x86_64 evidence_pack.tar --trusted-signers trusted_signers</pre>
+<details style="margin-top:24px"><summary>Build from source instead</summary><p class="small">Unzip the kit. With Rust and Cargo installed:</p>
+<pre>cargo build --release --locked --manifest-path verifier-source/Cargo.toml
+./verifier-source/target/release/isc_verify evidence_pack.tar --trusted-signers trusted_signers</pre>
+<p class="small" style="margin-top:16px">Building from source with --locked avoids relying on the prebuilt executable. You still trust the source, compiler and dependencies; --locked preserves dependency resolution, not a guarantee of correctness or reproducible binary output.</p></details>
+<p class="small" style="margin-top:20px">This website supplies both the files and demo key. For evidence from another issuer, obtain the expected signer key through a channel you trust. A checksum from this same website detects a changed download against the published value; it is not an independent trust source.</p>
+<p class="hash">TAR archive SHA-256<br>6d2f1df5bba377f7d4dd3f0d03876fa652ad4d5ba480f260b1f42f32a91d16aa</p>
+<p id="repository-checksums"><a href="https://github.com/iscproof-alt/Isc-Core/blob/92d87c272b1b7f4aaea95d30c557b5833503fd26/docs/releases/isc-site-demo-v1.md">Check the published checksums on GitHub →</a></p><p class="hash">Linux verifier SHA-256<br>1ce8f450a584f73a63506c1db449fdda25e90111075c68ae3ca67970dc7eb863</p>
+<p class="hash">Demo signer<br>256 SHA256:mGXkbMgdKDIVlMv5H0QO53i4ESoP4IkZK1nbF1jRmds ISC public demonstration key (ED25519)</p>
+</div><div><h3>Recorded verification output</h3><p class="small">Captured during an internal fixture test. It is not recomputed by this page. Run the verifier to obtain your own result.</p><pre>Content integrity:  valid
+Pack identity:      valid
+Manifest signature: valid (external trusted signer)
+Governance:         1 key(s), 0 revoked
+Signatures:         1 verified
+Governance:         valid
+Lineage:            skipped (V1 pack, no parents)
+Anchor:             not checked (unsupported)
 
-  <div class="actions">
-    <a class="btn btn-primary" id="downloadBtn" href="#" style="display:none">
-      &#8595; Download Evidence Pack
-    </a>
-    <a class="btn btn-secondary" href="https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify" target="_blank">
-      &#8595; Download isc_verify binary
-    </a>
-  </div>
+PACK VERIFIED
+</pre></div></div></section>
+<div class="band"><section class="wrap" id="tests"><div class="eyebrow">Tested behaviour</div><h2>Changed evidence must fail.</h2><p class="lead">Five local fixture checks exercise acceptance and rejection. These are project-run checks, not an external audit.</p><div style="overflow:auto"><table><thead><tr><th>Test</th><th>Verifier result</th><th>Exit</th><th>Test</th></tr></thead><tbody><tr><td>valid</td><td>PACK VERIFIED</td><td>0</td><td class="pass">PASS</td></tr><tr><td>changed-content</td><td>HASH_MISMATCH</td><td>1</td><td class="pass">PASS</td></tr><tr><td>missing-file</td><td>MISSING_FILE</td><td>1</td><td class="pass">PASS</td></tr><tr><td>missing-signature</td><td>MISSING_FILE</td><td>1</td><td class="pass">PASS</td></tr><tr><td>rewritten-manifest</td><td>SIGNATURE_INVALID</td><td>1</td><td class="pass">PASS</td></tr></tbody></table></div><div class="buttons"><a href="/downloads/report.json">Full test report</a><a href="/downloads/records.json">Record JSON</a><a href="/downloads/checksums.txt">Download checksums</a></div></section></div>
 
-  <div class="independent">
-    <div style="color:#e6edf3;margin-bottom:6px;font-weight:700">Independent Verification</div>
-    Verify without trusting BuildSeal. Run locally:<br/><br/>
-    <code>curl -L https://github.com/hakannbjk55-afk/Isc-Core/releases/download/v0.2.0/isc_verify -o isc_verify</code><br/>
-    <code>chmod +x isc_verify</code><br/>
-    <code>./isc_verify evidence_pack.tar</code>
-  </div>
-
-  <div class="footer">
-    <a href="https://buildseal.io">buildseal.io</a> &middot;
-    <a href="https://github.com/hakannbjk55-afk/Isc-Core" target="_blank">Open source verifier</a> &middot;
-    Independently verifiable
-  </div>
-</div>
-
-<script>
-const API = 'https://buildseal-api.onrender.com';
-
-function getSealId() {
-  const parts = window.location.pathname.split('/');
-  return parts[parts.length - 1] || parts[parts.length - 2];
-}
-
-async function load() {
-  const sealId = getSealId();
-  if (!sealId || sealId === 'release') {
-    document.getElementById('badge').textContent = 'NO SEAL ID';
-    return;
-  }
-
-  document.getElementById('sealId').textContent = sealId;
-  document.getElementById('generated').textContent = 'Generated ' + new Date().toUTCString();
-
-  try {
-    const res = await fetch(API + '/seal/' + sealId);
-    if (!res.ok) throw new Error('not found');
-    const data = await res.json();
-
-    const badge = document.getElementById('badge');
-    if (data.status === 'verified') {
-      badge.textContent = 'VERIFIED';
-      badge.className = 'badge ok';
-    } else if (data.status === 'queued') {
-      badge.textContent = 'PENDING';
-      badge.className = 'badge loading';
-    } else {
-      badge.textContent = data.status.toUpperCase();
-      badge.className = 'badge bad';
-    }
-
-    if (data.artifact_hash) document.getElementById('artifactHash').textContent = data.artifact_hash;
-    if (data.repo) document.getElementById('repo').textContent = data.repo;
-    if (data.commit) document.getElementById('commit').textContent = data.commit;
-    if (data.created_at) document.getElementById('createdAt').textContent = new Date(data.created_at).toUTCString();
-
-    if (data.evidence_pack_url) {
-      const btn = document.getElementById('downloadBtn');
-      btn.href = data.evidence_pack_url;
-      btn.style.display = 'block';
-    }
-
-  } catch(e) {
-    document.getElementById('badge').textContent = 'NOT FOUND';
-    document.getElementById('badge').className = 'badge bad';
-  }
-}
-
-load();
-</script>
-</body>
-</html>
+<div class="band"><section class="wrap" id="documentation"><div class="eyebrow">Where it fits</div><h2>A format for records you may need to examine later.</h2><div class="columns">
+<article class="card"><h3>Decision records</h3><p>Can carry a recorded outcome, reasons and policy version.</p></article>
+<article class="card"><h3>Agent records</h3><p>Can carry references to recorded instructions, inputs and tool outputs.</p></article>
+<article class="card"><h3>Review packages</h3><p>Can carry files and verification material for another party to inspect.</p></article></div>
+<p class="small" style="margin-top:20px">These describe possible uses of the format, not independently validated deployments. This demonstration tests file hashes and a manifest signature.</p><a href="/spec">Read the specification →</a></section></div>
+<section class="wrap" id="contact"><div class="eyebrow">Status and maintainers</div><h2>Know what you are evaluating.</h2>
+<div class="facts"><div><b>Verifier snapshot</b>Based on isc_verify v0.2.0, with local fixes and an explicit trusted-signer option. The exact demo source is included in the kit; this is not a claim that the older v0.2.0 release binary is identical.</div>
+<div><b>Internal tests</b>Five package cases passed: one acceptance case and four rejection cases.<p class="small">valid → PACK VERIFIED (exit 0); changed-content → HASH_MISMATCH (exit 1); missing-file → MISSING_FILE (exit 1); missing-signature → MISSING_FILE (exit 1); rewritten-manifest → SIGNATURE_INVALID (exit 1)</p><a href="/downloads/report.json">Read the exact test report →</a></div>
+<div><b>Independent assessment</b>The published results are project-run tests. No third-party assessment or certification is presented here.</div>
+<div><b>Demo signer</b><span class="hash">256 SHA256:mGXkbMgdKDIVlMv5H0QO53i4ESoP4IkZK1nbF1jRmds ISC public demonstration key (ED25519)</span><p class="small">Public demonstration key; not independent identity certification.</p></div>
+<div><b>Source and release locations</b><a href="https://codeberg.org/Buildseal/Isc-Core">Isc-Core source on Codeberg</a><br><a href="https://github.com/iscproof-alt/Isc-Core">GitHub source repository</a><p class="small">Separate hosting locations. Use the source snapshot and binary distributed with this demo for the published test results.</p></div>
+<div><b>Project maintenance and contact</b>Maintained by Hakan Ünal.<p><a href="https://codeberg.org/Buildseal/Isc-Core">Technical questions and integration discussions →</a></p></div></div>
+<div style="margin-top:48px"><h2>Bring one decision flow.</h2><p class="lead">We’ll identify what ISC can attest to, what must be trusted externally and what remains outside verification.</p><a class="btn primary" href="https://codeberg.org/Buildseal/Isc-Core">Discuss an integration →</a></div></section></main><footer><div class="wrap">iscproof.io · Inspectable records · Downloadable evidence · Local verification</div></footer>
+<script id="demo-data" type="application/json">{"records": [{"record": {"id": "record-01", "event": "decision", "previous_record_sha256": null, "request_sha256": "ded8338f899183a22d1b88151a49b11dbd4ef784d0222980574f37ec39902ded", "policy_version": 3, "policy_sha256": "abf29bd3b65d7f573793ead5d61387e0df3fa3e5d069fb048184df52d00d62ba", "illustrative": true, "decision": "APPROVED"}, "sha256": "3b7838000079410cae8f79b0166e789935feb95435dac09b84db11cbe41e7b0c"}, {"record": {"id": "record-02", "event": "policy_changed", "previous_record_sha256": "3b7838000079410cae8f79b0166e789935feb95435dac09b84db11cbe41e7b0c", "request_sha256": "ded8338f899183a22d1b88151a49b11dbd4ef784d0222980574f37ec39902ded", "policy_version": 4, "policy_sha256": "9fc34b091a12fceb8d80723fc095be3be029df13950c05ab79934e76b2f9afd7", "illustrative": true}, "sha256": "ffbeb319986daf021acfdd8d5bd1fddfa020444ae120326110272dcca6dc6639"}, {"record": {"id": "record-03", "event": "decision", "previous_record_sha256": "ffbeb319986daf021acfdd8d5bd1fddfa020444ae120326110272dcca6dc6639", "request_sha256": "ded8338f899183a22d1b88151a49b11dbd4ef784d0222980574f37ec39902ded", "policy_version": 4, "policy_sha256": "9fc34b091a12fceb8d80723fc095be3be029df13950c05ab79934e76b2f9afd7", "illustrative": true, "decision": "REJECTED"}, "sha256": "d43f9f430be61e9ad55f070b37db54a42d76168d26edc3ca2b7cf8a145c908a2"}]}</script><script>
+const data=JSON.parse(document.getElementById('demo-data').textContent);
+let selected=0,view=0;
+const headings=['Earlier decision','Policy updated','Later decision'];
+const views=['Record','Bindings','Change','Proof scope'];
+function make(tag,text){const e=document.createElement(tag);if(text!==undefined)e.textContent=String(text);return e;}
+function draw(){
+const list=document.getElementById('records');list.replaceChildren();
+data.records.forEach((entry,i)=>{const b=make('button');b.type='button';b.className='record';b.setAttribute('aria-pressed',String(selected===i));b.append(make('small','RECORD 0'+(i+1)),make('b',headings[i]));b.onclick=()=>{selected=i;draw();};list.append(b);});
+const tabs=document.getElementById('tabs');tabs.replaceChildren();views.forEach((name,i)=>{const b=make('button',name);b.type='button';b.setAttribute('aria-pressed',String(view===i));b.onclick=()=>{view=i;draw();};tabs.append(b);});
+const entry=data.records[selected],r=entry.record;
+const rows=view===0?[['Record',r.id],['Event',r.event],['Decision',r.decision||'Policy update'],['Record SHA-256',entry.sha256]]:view===1?[['Request SHA-256',r.request_sha256],['Policy version',r.policy_version],['Policy SHA-256',r.policy_sha256],['Previous record SHA-256',r.previous_record_sha256||'First record']]:view===2?[['Selected record',r.id],['Recorded decision',r.decision||'Policy update'],['Recorded policy version',r.policy_version||'Not recorded'],['Previous record SHA-256',r.previous_record_sha256||'Not recorded']]:[['File hashes','Checked by the included verifier'],['Manifest signature','Checked against the supplied demo signer'],['Record semantics','Outside this verification test'],['Trusted time / anchor','Not supplied / not checked']];
+const detail=document.getElementById('detail');detail.replaceChildren(make('h3',headings[selected]));const dl=make('dl');rows.forEach(([k,v])=>{const line=make('div');line.append(make('dt',k),make('dd',v));dl.append(line);});detail.append(dl);const fileLink=make('a','Open the packaged record JSON →');fileLink.href='/downloads/demo-records/'+encodeURIComponent(r.id)+'.json';detail.append(fileLink);
+}draw();
+</script></body></html>

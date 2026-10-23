@@ -1,0 +1,4 @@
+
+VERIFICATION FAILED
+Code:   HASH_MISMATCH
+Reason: Hash mismatch: artifacts/demo/record-01.json

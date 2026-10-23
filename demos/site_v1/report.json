@@ -1,0 +1,44 @@
+{
+  "profile": "isc-site-demo-v1",
+  "generated_at": "2026-10-22T21:38:08.019096+00:00",
+  "package_sha256": "6d2f1df5bba377f7d4dd3f0d03876fa652ad4d5ba480f260b1f42f32a91d16aa",
+  "verifier_sha256": "1ce8f450a584f73a63506c1db449fdda25e90111075c68ae3ca67970dc7eb863",
+  "source_sha256": "73120eb4b9aae0b26700d3aad1f222b05f9711a538f75d48755e6dc885a848ad",
+  "signer_fingerprint": "256 SHA256:mGXkbMgdKDIVlMv5H0QO53i4ESoP4IkZK1nbF1jRmds ISC public demonstration key (ED25519)",
+  "tests": [
+    {
+      "case": "valid",
+      "exit_code": 0,
+      "expected": "PACK VERIFIED",
+      "passed": true
+    },
+    {
+      "case": "changed-content",
+      "exit_code": 1,
+      "expected": "HASH_MISMATCH",
+      "passed": true
+    },
+    {
+      "case": "missing-file",
+      "exit_code": 1,
+      "expected": "MISSING_FILE",
+      "passed": true
+    },
+    {
+      "case": "missing-signature",
+      "exit_code": 1,
+      "expected": "MISSING_FILE",
+      "passed": true
+    },
+    {
+      "case": "rewritten-manifest",
+      "exit_code": 1,
+      "expected": "SIGNATURE_INVALID",
+      "passed": true
+    }
+  ],
+  "scope": "Signed manifest and file hashes; illustrative decision records. Demo signing key.",
+  "timestamp": "No RFC 3161 timestamp in this example.",
+  "lineage": "No parent packs. Semantic record-chain validation is outside this test.",
+  "anchor": "Not checked."
+}

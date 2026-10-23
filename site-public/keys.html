@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ISCProof — Signing Keys</title>
+<style>
+  body { font-family: monospace; background: #0a0a0a; color: #e0e0e0; margin: 0; padding: 40px; }
+  .container { max-width: 700px; margin: 0 auto; }
+  h1 { color: #4ade80; font-size: 1.4em; margin-bottom: 8px; }
+  .subtitle { color: #666; margin-bottom: 40px; font-size: 0.9em; }
+  .key-card { background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 24px; margin-bottom: 24px; }
+  .label { color: #888; font-size: 0.75em; margin-bottom: 4px; }
+  .value { color: #e0e0e0; font-size: 0.85em; word-break: break-all; margin-bottom: 16px; }
+  .fingerprint { color: #4ade80; font-size: 1.1em; font-weight: bold; }
+  .status { display: inline-block; background: #1a3a1a; color: #4ade80; border: 1px solid #2a5a2a; border-radius: 4px; padding: 2px 10px; font-size: 0.8em; margin-bottom: 16px; }
+  .footer { color: #444; font-size: 0.75em; margin-top: 40px; }
+  a { color: #4ade80; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>ISCProof Signing Keys</h1>
+  <p class="subtitle">Public keys used to sign ISCProof evidence packs. Verify independently.</p>
+
+  <div class="key-card">
+    <div class="label">FINGERPRINT</div>
+    <div class="value fingerprint">a5ec97589519d9ee</div>
+    <div class="status">ACTIVE</div>
+    <div class="label">PUBLIC KEY (ed25519)</div>
+    <div class="value">07bef2a88534eddfed032a4d06de927af771affe8975c98c21256a7855bdc03e</div>
+    <div class="label">ALGORITHM</div>
+    <div class="value">ed25519</div>
+    <div class="label">USED BY</div>
+    <div class="value">BuildSeal — buildseal.io</div>
+    <div class="label">ACTIVATED</div>
+    <div class="value">2026-04-01</div>
+    <div class="label">VERIFY COMMAND</div>
+    <div class="value">isc_pack_v5 --verify &lt;pack.json&gt;</div>
+  </div>
+
+  <div class="footer">
+    iscproof.io — trust nothing, verify everything —
+    <a href="https://buildseal.io">buildseal.io</a>
+  </div>
+</div>
+</body>
+</html>

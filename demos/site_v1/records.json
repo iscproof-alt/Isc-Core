@@ -1,0 +1,40 @@
+[
+  {
+    "record": {
+      "id": "record-01",
+      "event": "decision",
+      "previous_record_sha256": null,
+      "request_sha256": "ded8338f899183a22d1b88151a49b11dbd4ef784d0222980574f37ec39902ded",
+      "policy_version": 3,
+      "policy_sha256": "abf29bd3b65d7f573793ead5d61387e0df3fa3e5d069fb048184df52d00d62ba",
+      "illustrative": true,
+      "decision": "APPROVED"
+    },
+    "sha256": "3b7838000079410cae8f79b0166e789935feb95435dac09b84db11cbe41e7b0c"
+  },
+  {
+    "record": {
+      "id": "record-02",
+      "event": "policy_changed",
+      "previous_record_sha256": "3b7838000079410cae8f79b0166e789935feb95435dac09b84db11cbe41e7b0c",
+      "request_sha256": "ded8338f899183a22d1b88151a49b11dbd4ef784d0222980574f37ec39902ded",
+      "policy_version": 4,
+      "policy_sha256": "9fc34b091a12fceb8d80723fc095be3be029df13950c05ab79934e76b2f9afd7",
+      "illustrative": true
+    },
+    "sha256": "ffbeb319986daf021acfdd8d5bd1fddfa020444ae120326110272dcca6dc6639"
+  },
+  {
+    "record": {
+      "id": "record-03",
+      "event": "decision",
+      "previous_record_sha256": "ffbeb319986daf021acfdd8d5bd1fddfa020444ae120326110272dcca6dc6639",
+      "request_sha256": "ded8338f899183a22d1b88151a49b11dbd4ef784d0222980574f37ec39902ded",
+      "policy_version": 4,
+      "policy_sha256": "9fc34b091a12fceb8d80723fc095be3be029df13950c05ab79934e76b2f9afd7",
+      "illustrative": true,
+      "decision": "REJECTED"
+    },
+    "sha256": "d43f9f430be61e9ad55f070b37db54a42d76168d26edc3ca2b7cf8a145c908a2"
+  }
+]

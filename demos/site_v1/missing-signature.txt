@@ -1,0 +1,6 @@
+Content integrity:  valid
+Pack identity:      valid
+
+VERIFICATION FAILED
+Code:   MISSING_FILE
+Reason: Missing required file: artifacts/manifest.sig
