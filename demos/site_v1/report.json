@@ -1,44 +1,186 @@
 {
   "profile": "isc-site-demo-v1",
-  "generated_at": "2026-10-22T21:38:08.019096+00:00",
-  "package_sha256": "6d2f1df5bba377f7d4dd3f0d03876fa652ad4d5ba480f260b1f42f32a91d16aa",
-  "verifier_sha256": "1ce8f450a584f73a63506c1db449fdda25e90111075c68ae3ca67970dc7eb863",
-  "source_sha256": "73120eb4b9aae0b26700d3aad1f222b05f9711a538f75d48755e6dc885a848ad",
-  "signer_fingerprint": "256 SHA256:mGXkbMgdKDIVlMv5H0QO53i4ESoP4IkZK1nbF1jRmds ISC public demonstration key (ED25519)",
+  "verifier_version": "0.2.1",
   "tests": [
     {
       "case": "valid",
-      "exit_code": 0,
       "expected": "PACK VERIFIED",
-      "passed": true
+      "actual": "PACK VERIFIED",
+      "exit_code": 0,
+      "passed": true,
+      "output": "Content integrity:  valid\nPack identity:      valid\nManifest signature: valid (external trusted signer)\nGovernance keys:    1 key(s), 0 revoked\nSignatures:         1 verified\nGovernance parsing: valid\nLineage:            skipped (V1 pack, no parents)\nAnchor:             not checked (unsupported)\n\nPACK VERIFIED\n"
     },
     {
       "case": "changed-content",
-      "exit_code": 1,
       "expected": "HASH_MISMATCH",
-      "passed": true
+      "actual": "HASH_MISMATCH",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   HASH_MISMATCH\nReason: Hash mismatch: artifacts/demo/request.json\n"
     },
     {
       "case": "missing-file",
-      "exit_code": 1,
       "expected": "MISSING_FILE",
-      "passed": true
+      "actual": "MISSING_FILE",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   MISSING_FILE\nReason: Missing required file: artifacts/demo/request.json\n"
     },
     {
       "case": "missing-signature",
+      "expected": "SIGNATURE_MISSING",
+      "actual": "SIGNATURE_MISSING",
       "exit_code": 1,
-      "expected": "MISSING_FILE",
-      "passed": true
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   SIGNATURE_MISSING\nReason: Missing signature: artifacts/manifest.sig\n"
     },
     {
       "case": "rewritten-manifest",
-      "exit_code": 1,
       "expected": "SIGNATURE_INVALID",
-      "passed": true
+      "actual": "SIGNATURE_INVALID",
+      "exit_code": 1,
+      "passed": true,
+      "output": "Content integrity:  valid\nPack identity:      valid\n\nVERIFICATION FAILED\nCode:   SIGNATURE_INVALID\nReason: Signature error: Cryptographic verification failed: cryptographic error\n"
+    },
+    {
+      "case": "untrusted-signer",
+      "expected": "UNTRUSTED_SIGNER",
+      "actual": "UNTRUSTED_SIGNER",
+      "exit_code": 1,
+      "passed": true,
+      "output": "Content integrity:  valid\nPack identity:      valid\n\nVERIFICATION FAILED\nCode:   UNTRUSTED_SIGNER\nReason: Valid signature from an untrusted signer: Signing key is not in the supplied trust list for: content_manifest.sha256\n"
+    },
+    {
+      "case": "invalid-signature",
+      "expected": "SIGNATURE_INVALID",
+      "actual": "SIGNATURE_INVALID",
+      "exit_code": 1,
+      "passed": true,
+      "output": "Content integrity:  valid\nPack identity:      valid\n\nVERIFICATION FAILED\nCode:   SIGNATURE_INVALID\nReason: Signature error: Cryptographic verification failed: cryptographic error\n"
+    },
+    {
+      "case": "invalid-signature-untrusted-key",
+      "expected": "SIGNATURE_INVALID",
+      "actual": "SIGNATURE_INVALID",
+      "exit_code": 1,
+      "passed": true,
+      "output": "Content integrity:  valid\nPack identity:      valid\n\nVERIFICATION FAILED\nCode:   SIGNATURE_INVALID\nReason: Signature error: Cryptographic verification failed: cryptographic error\n"
+    },
+    {
+      "case": "unlisted-file",
+      "expected": "UNEXPECTED_FILE",
+      "actual": "UNEXPECTED_FILE",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   UNEXPECTED_FILE\nReason: Unlisted file: artifacts/unlisted.txt\n"
+    },
+    {
+      "case": "path-traversal",
+      "expected": "UNSAFE_ARCHIVE",
+      "actual": "UNSAFE_ARCHIVE",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   UNSAFE_ARCHIVE\nReason: Unsafe archive: ../isc-path-traversal-test\n"
+    },
+    {
+      "case": "absolute-path",
+      "expected": "UNSAFE_ARCHIVE",
+      "actual": "UNSAFE_ARCHIVE",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   UNSAFE_ARCHIVE\nReason: Unsafe archive: /tmp/isc-absolute-path-test\n"
+    },
+    {
+      "case": "symlink",
+      "expected": "UNSAFE_ARCHIVE",
+      "actual": "UNSAFE_ARCHIVE",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   UNSAFE_ARCHIVE\nReason: Unsafe archive: links and special entries forbidden: artifacts/unsafe-link\n"
+    },
+    {
+      "case": "hardlink",
+      "expected": "UNSAFE_ARCHIVE",
+      "actual": "UNSAFE_ARCHIVE",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   UNSAFE_ARCHIVE\nReason: Unsafe archive: links and special entries forbidden: artifacts/unsafe-hardlink\n"
+    },
+    {
+      "case": "duplicate-entry",
+      "expected": "UNSAFE_ARCHIVE",
+      "actual": "UNSAFE_ARCHIVE",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   UNSAFE_ARCHIVE\nReason: Unsafe archive: duplicate entry: artifacts/demo/request.json\n"
+    },
+    {
+      "case": "malformed-manifest",
+      "expected": "PARSE_ERROR",
+      "actual": "PARSE_ERROR",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   PARSE_ERROR\nReason: Parse error: invalid manifest line\n"
+    },
+    {
+      "case": "empty-manifest",
+      "expected": "PARSE_ERROR",
+      "actual": "PARSE_ERROR",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   PARSE_ERROR\nReason: Parse error: empty manifest\n"
+    },
+    {
+      "case": "bad-manifest-digest",
+      "expected": "PARSE_ERROR",
+      "actual": "PARSE_ERROR",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   PARSE_ERROR\nReason: Parse error: invalid SHA-256 digest\n"
+    },
+    {
+      "case": "manifest-traversal",
+      "expected": "UNSAFE_ARCHIVE",
+      "actual": "UNSAFE_ARCHIVE",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   UNSAFE_ARCHIVE\nReason: Unsafe archive: ../outside\n"
+    },
+    {
+      "case": "duplicate-manifest-path",
+      "expected": "PARSE_ERROR",
+      "actual": "PARSE_ERROR",
+      "exit_code": 1,
+      "passed": true,
+      "output": "\nVERIFICATION FAILED\nCode:   PARSE_ERROR\nReason: Parse error: noncanonical or duplicate manifest path\n"
     }
   ],
-  "scope": "Signed manifest and file hashes; illustrative decision records. Demo signing key.",
-  "timestamp": "No RFC 3161 timestamp in this example.",
-  "lineage": "No parent packs. Semantic record-chain validation is outside this test.",
-  "anchor": "Not checked."
+  "build_metadata": {
+    "source_commit": "4d5c74ebe91a5369d98d1d9debb4bcd6adc7c650",
+    "rustc": "rustc 1.94.1 (e408947bf 2026-03-25)\nbinary: rustc\ncommit-hash: e408947bfd200af42db322daf0fadfe7e26d3bd1\ncommit-date: 2026-03-25\nhost: x86_64-unknown-linux-gnu\nrelease: 1.94.1\nLLVM version: 21.1.8",
+    "cargo": "cargo 1.94.1 (29ea6fb6a 2026-03-24)",
+    "release_profile": {
+      "opt-level": 3,
+      "debug": false,
+      "strip": "symbols",
+      "lto": true,
+      "codegen-units": 1,
+      "panic": "abort"
+    },
+    "rustflags": "",
+    "cargo_encoded_rustflags": "",
+    "published_binary_sha256": "3baca30d28a8c7cb65d8ebc39d08e465f5c6e09b3d13d3cafab97362e71d8bc5",
+    "fresh_directory_rebuild_sha256": "3baca30d28a8c7cb65d8ebc39d08e465f5c6e09b3d13d3cafab97362e71d8bc5",
+    "fresh_rebuild_matches": true,
+    "rebuild_source": "git show of the three source files at source_commit; separate target directory",
+    "claim": "One recorded rebuild comparison; no general reproducible-build guarantee."
+  },
+  "generated_at": "2026-10-25T16:08:06.846702+00:00",
+  "source_commit": "4d5c74ebe91a5369d98d1d9debb4bcd6adc7c650",
+  "package_sha256": "6d2f1df5bba377f7d4dd3f0d03876fa652ad4d5ba480f260b1f42f32a91d16aa",
+  "verifier_sha256": "3baca30d28a8c7cb65d8ebc39d08e465f5c6e09b3d13d3cafab97362e71d8bc5",
+  "source_sha256": "d2593121f7e167b401dc86391b706b285d89ae4ba3449bc9afc4ea7d7578fd00",
+  "platform": "GLIBC symbol versions through 2.34",
+  "scope": "Project-run signed fixture and archive rejection tests. No decision-correctness or semantic chain validation.",
+  "timestamp": "No RFC 3161 timestamp in the ISC website demo."
 }

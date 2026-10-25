@@ -10,7 +10,7 @@ ISCProof describes evidence formats and verification workflows. This repository 
 
 The `isc-site-demo-v1` profile contains three illustrative decision/policy records and a signed file manifest. These are demonstration records, not customer data or a live AI execution.
 
-The included verifier checks file hashes against the manifest and verifies the manifest signature against an explicitly supplied demo signer key. It rejects the four tested forms of incomplete or modified evidence below.
+The included verifier checks file hashes against the manifest and verifies the manifest signature against an explicitly supplied demo signer key. Its published fixture suite checks signer trust and rejects the malformed or unexpected evidence cases below.
 
 It does **not** establish:
 
@@ -24,7 +24,7 @@ The verifier's internal package-identity calculation is separate from the SHA-25
 
 ## Verify locally
 
-The demonstration uses a verifier based on **v0.2.0 with local fixes and `--trusted-signers` support**. Use the exact included source snapshot rather than assuming that another v0.2.0 executable is identical.
+The demonstration uses a verifier **v0.2.1 with `--trusted-signers` support**. Use the exact included source snapshot for this versioned fixture.
 
 ### Build from the included source
 
@@ -45,11 +45,17 @@ Building with `--locked` avoids relying on the prebuilt executable and preserves
 
 ### Use the prebuilt Linux executable
 
-The [published executable](https://www.iscproof.io/downloads/isc_verify-linux-x86_64) is for **Linux x86-64**, dynamically linked, and requires **glibc 2.34 or later** and compatible system libraries. It is not a Windows or macOS executable.
+The [published executable](https://www.iscproof.io/downloads/isc_verify-linux-x86_64) is for **Linux x86-64**, dynamically linked, and GLIBC symbol versions through 2.34 and compatible system libraries. It is not a Windows or macOS executable.
 
 From a checkout containing the published website files:
 
 ```bash
+echo 'ac13771a13b106aecdded55f34420c786aa9764f05edc7abf2434c1192457457  site-public/downloads/isc_verify-linux-x86_64' | sha256sum -c -
+echo '6d2f1df5bba377f7d4dd3f0d03876fa652ad4d5ba480f260b1f42f32a91d16aa  site-public/downloads/evidence_pack.tar' | sha256sum -c -
+echo '2a3c02304c345b3634d4edd407280fbf2cd76bfb7ed48bba7733f17d839bafb1  site-public/downloads/trusted_signers' | sha256sum -c -
+echo '3baca30d28a8c7cb65d8ebc39d08e465f5c6e09b3d13d3cafab97362e71d8bc5  site-public/downloads/isc_verify-linux-x86_64' | sha256sum -c -
+echo '6d2f1df5bba377f7d4dd3f0d03876fa652ad4d5ba480f260b1f42f32a91d16aa  site-public/downloads/evidence_pack.tar' | sha256sum -c -
+echo '2a3c02304c345b3634d4edd407280fbf2cd76bfb7ed48bba7733f17d839bafb1  site-public/downloads/trusted_signers' | sha256sum -c -
 chmod +x site-public/downloads/isc_verify-linux-x86_64
 ./site-public/downloads/isc_verify-linux-x86_64 \
   site-public/downloads/evidence_pack.tar \
@@ -65,10 +71,24 @@ Compare the executable, archive and verifier-source hashes with the [published c
 | `valid` | `PACK VERIFIED` | 0 |
 | `changed-content` | `HASH_MISMATCH` | 1 |
 | `missing-file` | `MISSING_FILE` | 1 |
-| `missing-signature` | `MISSING_FILE` | 1 |
+| `missing-signature` | `SIGNATURE_MISSING` | 1 |
 | `rewritten-manifest` | `SIGNATURE_INVALID` | 1 |
+| `untrusted-signer` | `UNTRUSTED_SIGNER` | 1 |
+| `invalid-signature` | `SIGNATURE_INVALID` | 1 |
+| `invalid-signature-untrusted-key` | `SIGNATURE_INVALID` | 1 |
+| `unlisted-file` | `UNEXPECTED_FILE` | 1 |
+| `path-traversal` | `UNSAFE_ARCHIVE` | 1 |
+| `absolute-path` | `UNSAFE_ARCHIVE` | 1 |
+| `symlink` | `UNSAFE_ARCHIVE` | 1 |
+| `hardlink` | `UNSAFE_ARCHIVE` | 1 |
+| `duplicate-entry` | `UNSAFE_ARCHIVE` | 1 |
+| `malformed-manifest` | `PARSE_ERROR` | 1 |
+| `empty-manifest` | `PARSE_ERROR` | 1 |
+| `bad-manifest-digest` | `PARSE_ERROR` | 1 |
+| `manifest-traversal` | `UNSAFE_ARCHIVE` | 1 |
+| `duplicate-manifest-path` | `PARSE_ERROR` | 1 |
 
-These are five project-run fixture cases: one acceptance case and four rejection cases. The [report](demos/site_v1/report.json) and individual logs record those results. They are not a third-party audit or a general conformance certification.
+These are 19 project-run fixture cases: one acceptance case and 18 rejection cases. The [report](demos/site_v1/report.json) and individual logs record those results. They are not a third-party audit or a general conformance certification.
 
 ## Hosted Proof ID lookup
 
@@ -98,3 +118,8 @@ Bring one decision flow. We can identify what the proposed evidence can attest t
 ## License
 
 See [LICENSE](LICENSE). The repository currently states **All Rights Reserved** and is published for review and discussion. Public visibility does not grant an MIT license or unrestricted rights to use or redistribute the software. This documentation update does not change the license.
+
+
+Verifier v0.2.1 source commit: `4d5c74ebe91a5369d98d1d9debb4bcd6adc7c650`.
+
+Build metadata and fresh-directory rebuild comparison: `site-public/downloads/build-metadata.json`. No general reproducible-build claim.

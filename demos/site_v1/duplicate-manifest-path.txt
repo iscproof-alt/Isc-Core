@@ -1,0 +1,4 @@
+
+VERIFICATION FAILED
+Code:   PARSE_ERROR
+Reason: Parse error: noncanonical or duplicate manifest path

@@ -1,0 +1,6 @@
+Content integrity:  valid
+Pack identity:      valid
+
+VERIFICATION FAILED
+Code:   SIGNATURE_INVALID
+Reason: Signature error: Cryptographic verification failed: cryptographic error

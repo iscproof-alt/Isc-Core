@@ -1,0 +1,6 @@
+Content integrity:  valid
+Pack identity:      valid
+
+VERIFICATION FAILED
+Code:   UNTRUSTED_SIGNER
+Reason: Valid signature from an untrusted signer: Signing key is not in the supplied trust list for: content_manifest.sha256

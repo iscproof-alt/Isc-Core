@@ -1,29 +1,41 @@
-# ISC site demonstration: isc-site-demo-v1
+# ISC website verifier v0.2.1
 
-Verifier: based on v0.2.0, with local fixes and --trusted-signers support.
-Use the exact source snapshot in the demonstration kit.
+Source commit: `4d5c74ebe91a5369d98d1d9debb4bcd6adc7c650`
 
-Linux x86-64 executable: dynamically linked; glibc >= 2.34 plus compatible system libraries.
+Source snapshot SHA-256 (Cargo.toml + Cargo.lock + src/main.rs, in this order): `d2593121f7e167b401dc86391b706b285d89ae4ba3449bc9afc4ea7d7578fd00`
 
-| Artifact | SHA-256 |
+| File | SHA-256 |
 | --- | --- |
-| evidence_pack.tar | 6d2f1df5bba377f7d4dd3f0d03876fa652ad4d5ba480f260b1f42f32a91d16aa |
-| isc_verify-linux-x86_64 | 1ce8f450a584f73a63506c1db449fdda25e90111075c68ae3ca67970dc7eb863 |
-| verifier-source/src/main.rs | 73120eb4b9aae0b26700d3aad1f222b05f9711a538f75d48755e6dc885a848ad |
+| README.txt | `ab8d0469f02f98721d886c515b919a7de7fa36586dd7973b244e3bec36af0d17` |
+| absolute-path.txt | `589cda13816ed9c164167b92784e378c154f5d1672c1b5e70ab830b91fa9017b` |
+| bad-manifest-digest.txt | `ca5e6657cb502b148e059cd3a9cc264f36cc9d6cb640d702b283836c72db9378` |
+| build-metadata.json | `321c55608b61bc075fac7a92d1ef39949f6b4a80887467854356a0024ea969f1` |
+| changed-content.txt | `21768133958ec5124ab37e3d2186c818a1ffaa406ead160c08357944a3eedaa8` |
+| duplicate-entry.txt | `65e950e9bec4d844232a667272ce3d355f8a33e0ef05b8c122c2c88853f68e9d` |
+| duplicate-manifest-path.txt | `a99b9d5b6f0793cd165dd1d4e53195a01d042a5118e69315c0b6ca569525683a` |
+| empty-manifest.txt | `ec6f5670c991bd326e587e3879981b5916f57f4a9ae232d12322f7ecf839c39f` |
+| evidence_pack.tar | `6d2f1df5bba377f7d4dd3f0d03876fa652ad4d5ba480f260b1f42f32a91d16aa` |
+| hardlink.txt | `41a1d65666d4b036115d4877ebf56016ef6961e907e7189259c93fcd95a0f145` |
+| invalid-signature-untrusted-key.txt | `b7dca8d9c9e34730f40de6ad0c4cc67d5302d1b529512f2b9b1aee8201726646` |
+| invalid-signature.txt | `b7dca8d9c9e34730f40de6ad0c4cc67d5302d1b529512f2b9b1aee8201726646` |
+| isc-demo-kit.zip | `c2178b093b8979900452f555aa6d2e6bbfe658b50423d3b8d95f94540a4820f7` |
+| isc_verify-linux-x86_64 | `3baca30d28a8c7cb65d8ebc39d08e465f5c6e09b3d13d3cafab97362e71d8bc5` |
+| malformed-manifest.txt | `9f158a69db9ac6ef17809cdd44b526b7f595ef7a7796c6458136d34ecda92a43` |
+| manifest-traversal.txt | `6197f21f80f46d7eec6fe47447ca5aa2abf9607e88a59c06ad109e0204fd9676` |
+| missing-file.txt | `a721b6fbc68a81b1388d0105246dea49a5938dd7b0fcbcd99ec869014ab8175e` |
+| missing-signature.txt | `0b1e3391c7fa877ae32a694a9f76e2b76c1a53970a24e3385ac06807514a7107` |
+| path-traversal.txt | `004cdb2f8948a738eda163aeeb8f299beadccf6142026fce065ac5c5bb162c1f` |
+| records.json | `96257e0396bf00e9da8b8bf68707e3b85600db7d6807a78e2bb2eff09a037297` |
+| report.json | `5351dfba464e72b92915cf40466c6b53da58cb2e0853770cf754d0beec47f4a7` |
+| rewritten-manifest.txt | `b7dca8d9c9e34730f40de6ad0c4cc67d5302d1b529512f2b9b1aee8201726646` |
+| source-revision.json | `773a7618edc5fb028849f16b8b60a83e9be918a0d3ce00f8d383c011f958a690` |
+| symlink.txt | `3d2cea88be687f9baa83eb87bd62d19f06e69339f900b43c0c196d39550a15a3` |
+| trusted_signers | `2a3c02304c345b3634d4edd407280fbf2cd76bfb7ed48bba7733f17d839bafb1` |
+| unlisted-file.txt | `beb234a8af4b5592702666eab5b06eaa6949e1a0b1acede2d7184a9f7140641e` |
+| untrusted-signer.txt | `949768bde006024dfac553936da8404d171afa3635e443f295444c970cadd42c` |
+| valid.txt | `03880f61f4a97b2b4d401e0985c237739d976030d6483c713f66bb7709f1d328` |
 
-Demo signer: 256 SHA256:mGXkbMgdKDIVlMv5H0QO53i4ESoP4IkZK1nbF1jRmds ISC public demonstration key (ED25519)
+Tests: 19 passed. See `demos/site_v1/report.json`.
 
-## Internal test results
-
-- valid: expected PACK VERIFIED; exit 0; PASS
-- changed-content: expected HASH_MISMATCH; exit 1; PASS
-- missing-file: expected MISSING_FILE; exit 1; PASS
-- missing-signature: expected MISSING_FILE; exit 1; PASS
-- rewritten-manifest: expected SIGNATURE_INVALID; exit 1; PASS
-
-These are project-run results, not an independent audit. No RFC 3161 timestamp,
-blockchain anchor or semantic relationship verification is included in this example.
-The TAR archive checksum is not the verifier's internal package-identity calculation.
-The demo signer list is not independent issuer-identity certification.
-Building from source with --locked avoids trusting the prebuilt executable;
-it still relies on source, toolchain and dependencies.
+No RFC3161 timestamp in this fixture. The BuildSeal 5.1 verifier and scope are separate.
+These are project-run tests and operator-controlled publication channels.

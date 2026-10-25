@@ -1,9 +1,9 @@
 Content integrity:  valid
 Pack identity:      valid
 Manifest signature: valid (external trusted signer)
-Governance:         1 key(s), 0 revoked
+Governance keys:    1 key(s), 0 revoked
 Signatures:         1 verified
-Governance:         valid
+Governance parsing: valid
 Lineage:            skipped (V1 pack, no parents)
 Anchor:             not checked (unsupported)
 

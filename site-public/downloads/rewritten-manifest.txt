@@ -3,4 +3,4 @@ Pack identity:      valid
 
 VERIFICATION FAILED
 Code:   SIGNATURE_INVALID
-Reason: Signature error: No valid signature for: content_manifest.sha256
+Reason: Signature error: Cryptographic verification failed: cryptographic error
