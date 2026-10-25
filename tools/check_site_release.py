@@ -34,7 +34,7 @@ def main():
   committed=subprocess.run(['git','show',source+':isc_verify/'+relative],cwd=ROOT,check=True,capture_output=True).stdout
   assert (ROOT/'demos/site_v1/verifier-source'/relative).read_bytes()==committed
  if args.check_remotes:
-  for label,url in [('GitHub','https://github.com/iscproof-alt/Isc-Core.git'),('Codeberg','https://codeberg.org/Buildseal/Isc-Core.git')]:
+  for label,url in [('GitHub','https://github.com/iscproof-alt/Isc-Core.git')]:
    refs=run(['git','ls-remote',url,'refs/tags/isc-verify-v0.2.1-source'])
    assert refs.split()[0]==source,label+': source tag does not match source_commit'
    print('PASS: Source commit tag is available on '+label)

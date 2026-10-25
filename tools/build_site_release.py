@@ -115,7 +115,7 @@ other regular files must be explicitly listed and hash-checked.
         table=''.join('<tr><td>'+html.escape(t['case'])+'</td><td>'+html.escape(t['actual'])+'</td><td>'+str(t['exit_code'])+'</td><td class="pass">PASS</td></tr>' for t in report['tests'])
         for filename in ['index.html']:
             text=(ROOT/filename).read_text()
-            text=re.sub(r'<b>Verifier snapshot</b>.*?</div>', f'<b>Verifier snapshot</b>isc_verify v0.2.1. Source snapshot: <a href="https://github.com/iscproof-alt/Isc-Core/tree/{revision}/demos/site_v1/verifier-source"><code>{revision}</code></a>. <a href="https://codeberg.org/Buildseal/Isc-Core/src/commit/{revision}/demos/site_v1/verifier-source">Same source commit on Codeberg</a>.</div>',text,count=1,flags=re.S)
+            text=re.sub(r'<b>Verifier snapshot</b>.*?</div>', f'<b>Verifier snapshot</b>isc_verify v0.2.1. Source snapshot: <a href="https://github.com/iscproof-alt/Isc-Core/tree/{revision}/demos/site_v1/verifier-source"><code>{revision}</code></a>.</div>',text,count=1,flags=re.S)
             text=text.replace('Based on isc_verify v0.2.0, with local fixes and an explicit trusted-signer option. The exact demo source is included in the kit; this is not a claim that the older v0.2.0 release binary is identical.',f'isc_verify v0.2.1. Exact source snapshot: <a href="https://github.com/iscproof-alt/Isc-Core/tree/{revision}/demos/site_v1/verifier-source"><code>{revision}</code></a>.')
             text=text.replace('It is based on v0.2.0 with local fixes and\n      <code>--trusted-signers</code> support.','It is version 0.2.1, with\n      <code>--trusted-signers</code> support.')
             kit_hash=digest(kit)
