@@ -21,7 +21,44 @@
 <li>Whether a decision was correct or justified.</li>
 <li>The meaning or validity of relationships between records.</li>
 <li>When the package was created or signed. Dates inside the files are signer-stated, not independently timestamped.</li>
-</ul></article></div><p class="small" style="margin-top:20px">No RFC 3161 timestamp or blockchain anchor is included. The demo key identifies this demonstration; it does not independently establish the issuer’s identity. The TAR archive SHA-256 shown below is a separate download checksum, not the verifier’s internal package-identity calculation.</p></section><section class="wrap" id="downloads"><div class="eyebrow">Download and verify</div>
+</ul></article></div><p class="small" style="margin-top:20px">No RFC 3161 timestamp or blockchain anchor is included. The demo key identifies this demonstration; it does not independently establish the issuer’s identity. The TAR archive SHA-256 shown below is a separate download checksum, not the verifier’s internal package-identity calculation.</p></section>
+<section class="wrap" id="verifier-profiles">
+  <div class="eyebrow">Choose the matching verifier</div>
+  <h2>Two examples. Different verification profiles.</h2>
+  <div class="twocol">
+    <article class="card">
+      <h3>ISC website demonstration</h3>
+      <p>Use the included <code>isc_verify</code> snapshot for this
+      website's <code>evidence_pack.tar</code> demonstration.
+      It is based on v0.2.0 with local fixes and
+      <code>--trusted-signers</code> support.</p>
+      <p>This example checks file hashes and the manifest signature.
+      It includes no RFC 3161 timestamp.</p>
+      <a href="#downloads">Download this demonstration →</a>
+    </article>
+    <article class="card">
+      <h3>BuildSeal hosted 5.1 example</h3>
+      <p>Use <code>isc_pack_v5_bin</code> for the published BuildSeal
+      5.1 example. Its separate download includes the content file,
+      signed package, verifier source, public key and TSA CA certificate.</p>
+      <p>Local strict verification checks content matching, package
+      integrity, signature, the explicitly trusted signing key and
+      timestamp verification against the supplied CA trust store.</p>
+      <a href="https://buildseal.io/experience.html#offline-verification">
+        Open the BuildSeal example and instructions →
+      </a>
+    </article>
+  </div>
+  <aside class="scope-note">
+    <b>Use the verifier distributed with the matching example.</b>
+    <p>Compatibility between these profiles has not been established.
+    Neither result establishes decision correctness or independently
+    certifies the signer's identity. Strict success depends on the
+    signing key and CA trust anchors you choose.</p>
+  </aside>
+</section>
+
+<section class="wrap" id="downloads"><div class="eyebrow">Download and verify</div>
 <h2>Check the package on your own machine.</h2><p class="lead">The kit includes the evidence archive, demo signer list, exact verifier source snapshot, records and internal test outputs.</p>
 <div class="buttons"><a class="btn primary" download href="/downloads/isc_verify-linux-x86_64">Linux x86-64 verifier</a><a class="btn" download href="/downloads/isc-demo-kit.zip">Complete verification kit</a><a class="btn" download href="/downloads/evidence_pack.tar">Evidence package</a><a class="btn" download href="/downloads/trusted_signers">Demo signer list</a></div>
 <p class="small" style="margin-top:16px">Prebuilt binary: Linux x86-64, dynamically linked; requires glibc 2.34 or later and compatible system libraries. It is not a Windows or macOS executable.</p>
