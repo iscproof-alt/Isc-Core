@@ -7,6 +7,9 @@ use ssh_key::{PublicKey, SshSig};
 #[derive(Debug)]
 enum VerifyError {
     MissingFile(String),
+    SignatureMissing(String),
+    UnsafeArchive(String),
+    UnexpectedFile(String),
     HashMismatch(String),
     ParseError(String),
     PackIdentityMismatch,
@@ -20,6 +23,9 @@ enum VerifyError {
 impl std::fmt::Display for VerifyError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
+            VerifyError::SignatureMissing(p) => write!(f, "Missing signature: {}", p),
+            VerifyError::UnsafeArchive(p) => write!(f, "Unsafe archive: {}", p),
+            VerifyError::UnexpectedFile(p) => write!(f, "Unlisted file: {}", p),
             VerifyError::MissingFile(p) => write!(f, "Missing required file: {}", p),
             VerifyError::HashMismatch(p) => write!(f, "Hash mismatch: {}", p),
             VerifyError::ParseError(e) => write!(f, "Parse error: {}", e),
@@ -46,43 +52,93 @@ fn sha256_bytes(data: &[u8]) -> String {
     hex::encode(hasher.finalize())
 }
 
+// This profile accepts regular files and directories only; no link extraction.
+fn safe_relative_name(value: &str) -> Result<String, VerifyError> {
+    let value = value.strip_prefix("./").unwrap_or(value).trim_end_matches('/');
+    if value.is_empty() || value.starts_with('/') || value.contains('\\') ||
+       value.contains('\0') || value.split('/').any(|p| p.is_empty() || p == "." || p == ".." || p.contains(':')) {
+        return Err(VerifyError::UnsafeArchive(value.to_string()));
+    }
+    Ok(value.to_string())
+}
+
 fn extract_tar(tar_path: &Path, out_dir: &Path) -> Result<(), VerifyError> {
+    use std::io::{Read, Write};
     let file = fs::File::open(tar_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
     let mut archive = tar::Archive::new(file);
-    for entry in archive.entries().map_err(|e| VerifyError::IoError(e.to_string()))? {
+    let mut seen = std::collections::HashSet::new();
+    let mut total = 0u64;
+    for (count, entry) in archive.entries().map_err(|e| VerifyError::IoError(e.to_string()))?.enumerate() {
+        if count >= 512 { return Err(VerifyError::UnsafeArchive("too many entries".into())); }
         let mut entry = entry.map_err(|e| VerifyError::IoError(e.to_string()))?;
-        let entry_path = entry.path().map_err(|e| VerifyError::IoError(e.to_string()))?;
-        let entry_str = entry_path.to_string_lossy();
-        if entry_str.contains("..") || entry_str.starts_with('/') {
-            return Err(VerifyError::ParseError(format!("Unsafe path: {}", entry_str)));
+        let path = entry.path().map_err(|e| VerifyError::UnsafeArchive(e.to_string()))?;
+        let raw = path.to_str().ok_or_else(|| VerifyError::UnsafeArchive("non-UTF-8 path".into()))?;
+        let name = safe_relative_name(raw)?;
+        if !seen.insert(name.clone()) { return Err(VerifyError::UnsafeArchive(format!("duplicate entry: {}",name))); }
+        let kind = entry.header().entry_type();
+        if !kind.is_file() && !kind.is_dir() {
+            return Err(VerifyError::UnsafeArchive(format!("links and special entries forbidden: {}",name)));
         }
-        entry.unpack_in(out_dir).map_err(|e| VerifyError::IoError(e.to_string()))?;
+        let dest = out_dir.join(&name);
+        if kind.is_dir() {
+            fs::create_dir_all(&dest).map_err(|e| VerifyError::IoError(e.to_string()))?;
+            continue;
+        }
+        let size = entry.size();
+        total = total.checked_add(size).ok_or_else(|| VerifyError::UnsafeArchive("size overflow".into()))?;
+        if size > 64 * 1024 * 1024 || total > 128 * 1024 * 1024 {
+            return Err(VerifyError::UnsafeArchive("size limit exceeded".into()));
+        }
+        if let Some(parent) = dest.parent() {
+            fs::create_dir_all(parent).map_err(|e| VerifyError::IoError(e.to_string()))?;
+        }
+        let mut output = fs::OpenOptions::new().write(true).create_new(true).open(&dest)
+            .map_err(|e| VerifyError::IoError(e.to_string()))?;
+        let mut buffer = Vec::new();
+        entry.read_to_end(&mut buffer).map_err(|e| VerifyError::IoError(e.to_string()))?;
+        output.write_all(&buffer).map_err(|e| VerifyError::IoError(e.to_string()))?;
     }
     Ok(())
 }
 
 fn parse_manifest(manifest_path: &Path) -> Result<Vec<(String, String)>, VerifyError> {
     let content = fs::read_to_string(manifest_path)
-        .map_err(|e| VerifyError::IoError(e.to_string()))?;
+        .map_err(|e| VerifyError::ParseError(e.to_string()))?;
+    if content.len() > 1024 * 1024 { return Err(VerifyError::ParseError("manifest too large".into())); }
     let mut entries = Vec::new();
     let mut paths_seen = std::collections::HashSet::new();
     for line in content.lines() {
         let line = line.trim();
         if line.is_empty() || line.starts_with('#') { continue; }
-        let parts: Vec<&str> = line.splitn(2, "  ").collect();
-        if parts.len() != 2 {
-            return Err(VerifyError::ParseError(format!("Invalid manifest line: {}", line)));
+        let (digest, path) = line.split_once("  ")
+            .ok_or_else(|| VerifyError::ParseError("invalid manifest line".into()))?;
+        let hash = digest.strip_prefix("sha256:").unwrap_or(digest);
+        if hash.len() != 64 || !hash.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return Err(VerifyError::ParseError("invalid SHA-256 digest".into()));
         }
-        let hash = parts[0].trim_start_matches("sha256:").to_string();
-        let path = parts[1].to_string();
-        if paths_seen.contains(&path) {
-            return Err(VerifyError::ParseError(format!("Duplicate path: {}", path)));
+        let normalized = safe_relative_name(path)?;
+        if normalized != path || !paths_seen.insert(normalized.clone()) {
+            return Err(VerifyError::ParseError("noncanonical or duplicate manifest path".into()));
         }
-        paths_seen.insert(path.clone());
-        entries.push((hash, path));
+        entries.push((hash.to_ascii_lowercase(), normalized));
     }
-    entries.sort_by(|a, b| a.1.cmp(&b.1));
+    if entries.is_empty() { return Err(VerifyError::ParseError("empty manifest".into())); }
+    entries.sort_by(|a,b| a.1.cmp(&b.1));
     Ok(entries)
+}
+
+fn check_file_inventory(base: &Path, dir: &Path, listed: &std::collections::HashSet<String>) -> Result<(), VerifyError> {
+    for entry in fs::read_dir(dir).map_err(|e| VerifyError::IoError(e.to_string()))? {
+        let entry = entry.map_err(|e| VerifyError::IoError(e.to_string()))?;
+        let path = entry.path();
+        if path.is_dir() { check_file_inventory(base, &path, listed)?; }
+        else {
+            let relative = path.strip_prefix(base).map_err(|e| VerifyError::IoError(e.to_string()))?
+                .to_string_lossy().replace('\\', "/");
+            if !listed.contains(&relative) { return Err(VerifyError::UnexpectedFile(relative)); }
+        }
+    }
+    Ok(())
 }
 
 fn parse_allowed_signers(path: &Path) -> Result<Vec<PublicKey>, VerifyError> {
@@ -236,10 +292,19 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str, truste
         .ok_or_else(|| VerifyError::MissingFile("content_manifest".to_string()))?;
 
     let entries = parse_manifest(&manifest_path)?;
-    let manifest_name = manifest_path.file_name().unwrap().to_string_lossy().to_string();
+    let manifest_relative = manifest_path.strip_prefix(&base).unwrap().to_string_lossy().replace('\\', "/");
+    let mut inventory: std::collections::HashSet<String> = entries.iter().map(|(_, p)| p.clone()).collect();
+    if inventory.contains(&manifest_relative) || inventory.contains("artifacts/manifest.sig") {
+        return Err(VerifyError::ParseError("manifest and detached signature are envelope files, not payload entries".into()));
+    }
+    inventory.insert(manifest_relative);
+    inventory.insert("artifacts/manifest.sig".into());
+    check_file_inventory(&base, &base, &inventory)?;
+    if trusted_signers.is_some() && !base.join("artifacts/manifest.sig").is_file() {
+        return Err(VerifyError::SignatureMissing("artifacts/manifest.sig".into()));
+    }
 
     for (expected_hash, rel_path) in &entries {
-        if rel_path.ends_with(&manifest_name) { continue; }
         let file_path = base.join(rel_path);
         if !file_path.exists() {
             return Err(VerifyError::MissingFile(rel_path.clone()));
@@ -306,7 +371,7 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str, truste
         }
         let manifest_signature = base.join("artifacts/manifest.sig");
         if !manifest_signature.exists() {
-            return Err(VerifyError::MissingFile(
+            return Err(VerifyError::SignatureMissing(
                 "artifacts/manifest.sig".to_string()
             ));
         }
@@ -325,7 +390,7 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str, truste
         parse_revocation(&revocation_path)?
     } else { vec![] };
 
-    println!("Governance:         {} key(s), {} revoked", gov_keys.len(), revoked.len());
+    println!("Governance keys:    {} key(s), {} revoked", gov_keys.len(), revoked.len());
 
     let time_signers_path = base.join("artifacts/time_layer_v1_signed/keys/allowed_signers");
     let time_keys = if time_signers_path.exists() {
@@ -354,7 +419,7 @@ fn verify_pack(pack_path: &Path, verify_anchor_flag: bool, rpc_url: &str, truste
     }
 
     println!("Signatures:         {} verified", sig_count);
-    println!("Governance:         valid");
+    println!("Governance parsing: valid");
 
     // Lineage
     let pack_dir = pack_path.parent().unwrap_or(Path::new("."));
@@ -380,9 +445,9 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() < 2 {
-        eprintln!("isc_verify v0.2.0");
+        eprintln!("isc_verify {}", env!("CARGO_PKG_VERSION"));
         eprintln!("Usage:");
-        eprintln!("  isc_verify <evidence_pack.tar> [--verify-anchor] [--rpc-url <url>]");
+        eprintln!("  isc_verify <evidence_pack.tar> [--trusted-signers <file>] [--verify-anchor] [--rpc-url <url>]");
         eprintln!("  isc_verify --version");
         process::exit(2);
     }
@@ -421,6 +486,9 @@ fn main() {
         }
         Err(e) => {
             let code = match &e {
+                VerifyError::SignatureMissing(_) => "SIGNATURE_MISSING",
+                VerifyError::UnsafeArchive(_) => "UNSAFE_ARCHIVE",
+                VerifyError::UnexpectedFile(_) => "UNEXPECTED_FILE",
                 VerifyError::HashMismatch(_) => "HASH_MISMATCH",
                 VerifyError::PackIdentityMismatch => "PACK_IDENTITY_MISMATCH",
                 VerifyError::SignatureError(_) => "SIGNATURE_INVALID",
