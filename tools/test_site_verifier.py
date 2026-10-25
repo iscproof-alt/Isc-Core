@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Run the real verifier against signed fixtures; never extract attack archives."""
 import argparse
+import base64
+import textwrap
 import hashlib
 import io
 import json
@@ -62,7 +64,14 @@ def run_suite(binary, report_dir=None):
         subprocess.run(['ssh-keygen','-q','-t','ed25519','-N','','-f',str(temp/'other-key')], check=True)
         other = temp/'other-signers'
         other.write_text('unrelated ' + (temp/'other-key.pub').read_text())
-        cases.append(('untrusted-signer', original.copy(), [], other, 'SIGNATURE_INVALID', 1))
+        cases.append(('untrusted-signer', original.copy(), [], other, 'UNTRUSTED_SIGNER', 1))
+        damaged = original.copy()
+        raw = bytearray(base64.b64decode(b''.join(damaged['artifacts/manifest.sig'].splitlines()[1:-1])))
+        raw[-1] ^= 1
+        encoded = '\n'.join(textwrap.wrap(base64.b64encode(raw).decode(),70))
+        damaged['artifacts/manifest.sig'] = ('-----BEGIN SSH SIGNATURE-----\n'+encoded+'\n-----END SSH SIGNATURE-----\n').encode()
+        cases.append(('invalid-signature', damaged.copy(), [], trust, 'SIGNATURE_INVALID', 1))
+        cases.append(('invalid-signature-untrusted-key', damaged, [], other, 'SIGNATURE_INVALID', 1))
         extra = original.copy(); extra['artifacts/unlisted.txt'] = b'not in signed manifest'
         cases.append(('unlisted-file', extra, [], trust, 'UNEXPECTED_FILE', 1))
         for name, tar_path, kind, link in [

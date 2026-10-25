@@ -15,6 +15,7 @@ enum VerifyError {
     PackIdentityMismatch,
     GovernanceError(String),
     SignatureError(String),
+    UntrustedSigner(String),
     AnchorError(String),
     LineageError(String),
     IoError(String),
@@ -31,6 +32,7 @@ impl std::fmt::Display for VerifyError {
             VerifyError::ParseError(e) => write!(f, "Parse error: {}", e),
             VerifyError::PackIdentityMismatch => write!(f, "Pack identity mismatch"),
             VerifyError::GovernanceError(e) => write!(f, "Governance error: {}", e),
+            VerifyError::UntrustedSigner(e) => write!(f, "Valid signature from an untrusted signer: {}", e),
             VerifyError::SignatureError(e) => write!(f, "Signature error: {}", e),
             VerifyError::AnchorError(e) => write!(f, "Anchor error: {}", e),
             VerifyError::LineageError(e) => write!(f, "Lineage error: {}", e),
@@ -191,13 +193,16 @@ fn verify_signature(sig_path: &Path, payload_path: &Path, allowed_keys: &[Public
         .map_err(|e| VerifyError::SignatureError(format!("Invalid sig format: {}", e)))?;
     let payload = fs::read(payload_path).map_err(|e| VerifyError::IoError(e.to_string()))?;
     let namespace = ssh_sig.namespace();
+    let signing_key = PublicKey::new(ssh_sig.public_key().clone(), "");
+    signing_key.verify(namespace, &payload, &ssh_sig)
+        .map_err(|e| VerifyError::SignatureError(format!("Cryptographic verification failed: {}", e)))?;
     for pk in allowed_keys {
         if pk.verify(namespace, &payload, &ssh_sig).is_ok() {
             return Ok(());
         }
     }
-    Err(VerifyError::SignatureError(format!(
-        "No valid signature for: {}", payload_path.file_name().unwrap_or_default().to_string_lossy()
+    Err(VerifyError::UntrustedSigner(format!(
+        "Signing key is not in the supplied trust list for: {}", payload_path.file_name().unwrap_or_default().to_string_lossy()
     )))
 }
 
@@ -491,6 +496,7 @@ fn main() {
                 VerifyError::UnexpectedFile(_) => "UNEXPECTED_FILE",
                 VerifyError::HashMismatch(_) => "HASH_MISMATCH",
                 VerifyError::PackIdentityMismatch => "PACK_IDENTITY_MISMATCH",
+                VerifyError::UntrustedSigner(_) => "UNTRUSTED_SIGNER",
                 VerifyError::SignatureError(_) => "SIGNATURE_INVALID",
                 VerifyError::GovernanceError(_) => "GOVERNANCE_ERROR",
                 VerifyError::MissingFile(_) => "MISSING_FILE",
